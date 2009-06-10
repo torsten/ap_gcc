@@ -1,0 +1,596 @@
+Index: include/vrs/opengl/offscreencanvasgl.h
+===================================================================
+--- include/vrs/opengl/offscreencanvasgl.h	(revision 6691)
++++ include/vrs/opengl/offscreencanvasgl.h	(working copy)
+@@ -1,3 +1,4 @@
++#ifndef __APPLE__
+  /**********************************************************************
+  VRS - The Virtual Rendering System
+  Copyright (C) 2001 Computer Graphics Systems Group at the 
+@@ -225,3 +226,4 @@
+ } // namespace VRS
+ 
+ #endif // VRS_OPENGL_OFFSCREENCANVASGL_H_
++#endif // __APPLE__
+Index: include/vrs/qt4/qt4winapplication.h
+===================================================================
+--- include/vrs/qt4/qt4winapplication.h	(revision 6691)
++++ include/vrs/qt4/qt4winapplication.h	(working copy)
+@@ -25,7 +25,7 @@
+ #include <QtGui/QApplication>
+ #include <vector>
+ 
+-#if !defined(WIN32) && !defined(__APPLE__)
++#if !defined(WIN32)
+     typedef int MSG; // dummy typedef in order to define a type for MSG below
+ #endif // WIN32
+ 
+Index: src/text/fontmanager.cpp
+===================================================================
+--- src/text/fontmanager.cpp	(revision 6691)
++++ src/text/fontmanager.cpp	(working copy)
+@@ -25,7 +25,7 @@
+ # include "../../3rd-party/glew-1.5.1/include/GL/wglew.h"
+ #else //WIN32
+ // Linux - Get system Fonts with FontConfig
+-# include <fontconfig.h>
++# include <fontconfig.h>
+ # include <X11/Xlib.h> // for retrieving DPI
+ #endif // else of WIN32
+ 
+@@ -82,31 +82,35 @@
+         FT_Error err = FT_Init_FreeType( &m_Library ); 
+ 
+         VRS_Error( !err, "Could not inititialize Freetype.");
+-//        Logger::get()->logInfo( "vrs_text",  "Freetype initialized" );   
++//        Logger::get()->logInfo( "vrs_text",  "Freetype initialized" );   
+ 
+ #ifdef WIN32
+         HDC screen = GetDC(0);
+         m_HoriResolution = GetDeviceCaps(screen, LOGPIXELSX);
+         m_VertResolution = GetDeviceCaps(screen, LOGPIXELSY);
+-        ReleaseDC(0, screen);
+-#else
+-        Display* display;
+-        int screen_num;
+-        
+-        display = XOpenDisplay(NULL);
+-        if(display) {
+-            screen_num = DefaultScreen(display);
+-
++        ReleaseDC(0, screen);
++#else
++        Display* display;
++        int screen_num;
++        
++#ifndef __APPLE__
++        display = XOpenDisplay(NULL);
++#endif
++        if(display) {
++            screen_num = DefaultScreen(display);
++
+             unsigned int display_width  = DisplayWidth(display, screen_num);
+             unsigned int display_height = DisplayHeight(display, screen_num);
+ 
+             unsigned int display_width_mm  = DisplayWidthMM(display, screen_num);
+-            unsigned int display_height_mm = DisplayHeightMM(display, screen_num);
+-
++            unsigned int display_height_mm = DisplayHeightMM(display, screen_num);
++
+             m_HoriResolution = (254 * display_width) / (10 * display_width_mm);
+-            m_VertResolution = (254 * display_height) / (10 * display_height_mm);
++            m_VertResolution = (254 * display_height) / (10 * display_height_mm);
+ 
+-            XCloseDisplay(display);
++#ifndef __APPLE__
++            XCloseDisplay(display);
++#endif
+         }
+ #endif // WIN32
+ 
+Index: src/opengl/enginegl.cpp
+===================================================================
+--- src/opengl/enginegl.cpp	(revision 6691)
++++ src/opengl/enginegl.cpp	(working copy)
+@@ -51,14 +51,13 @@
+ #include <sstream>
+ 
+ #if !defined(__APPLE__) && defined(unix)
++# include <X11/Xlib.h>
++# include <GL/gl.h>
+ # include <GL/glx.h>
++#elif defined(__APPLE__)
++# include <OpenGL/gl.h>
+ #endif // !__APPLE__ && unix
+ 
+-#ifdef unix
+-# include <GL/gl.h>
+-# include <X11/Xlib.h>
+-#endif
+-
+ namespace VRS {
+ 
+ //
+@@ -516,18 +515,12 @@
+         Display* dpy = glXGetCurrentDisplay();
+         int screenNo = XScreenNumberOfScreen(XDefaultScreenOfDisplay(dpy));
+ 
+-# ifdef __APPLE__
++# if !defined(__APPLE__) && defined(unix)
+         if(!dpy) {
+-            dpy = XOpenDisplay("localhost:0");
+-	    screenNo = 0;
+-        }
+-# endif // __APPLE__
+-#if !defined(__APPLE__) && defined(unix)
+-        if(!dpy) {
+             dpy = XOpenDisplay(":0");
+             screenNo = 0;
+         }
+-# endif // __APPLE__
++# endif // !defined(__APPLE__) && defined(unix)
+ 
+         if (dpy) {
+             exts = glXQueryExtensionsString(dpy, screenNo);
+@@ -601,13 +594,6 @@
+         Display* dpy = glXGetCurrentDisplay();
+         int screenNo = XScreenNumberOfScreen(XDefaultScreenOfDisplay(dpy));
+ 
+-# ifdef __APPLE__
+-        if(!dpy) {
+-            dpy = XOpenDisplay("localhost:0");
+-	    screenNo = 0;
+-        }
+-# endif // __APPLE__
+-
+ 	out << std::endl;
+         out << "GLX Server Version:    " << (char*)glXQueryServerString(dpy, screenNo, GLX_VERSION) << endl;
+         out << "GLX Server Vendor:     " << (char*)glXQueryServerString(dpy, screenNo, GLX_VENDOR) << endl;
+Index: src/opengl/offscreencanvasgl.cpp
+===================================================================
+--- src/opengl/offscreencanvasgl.cpp	(revision 6691)
++++ src/opengl/offscreencanvasgl.cpp	(working copy)
+@@ -1,3 +1,4 @@
++#ifndef __APPLE__
+  /**********************************************************************
+  VRS - The Virtual Rendering System
+  Copyright (C) 2001 Computer Graphics Systems Group at the 
+@@ -790,3 +791,4 @@
+ }
+ 
+ } // namespace VRS
++#endif // __APPLE__
+Index: src/opengl/fbo/framebufferobjectgl.cpp
+===================================================================
+--- src/opengl/fbo/framebufferobjectgl.cpp	(revision 6691)
++++ src/opengl/fbo/framebufferobjectgl.cpp	(working copy)
+@@ -312,7 +312,12 @@
+         // ensure valid GLCanvas
+         if(!canvas) {
+             // create small OffscreenCanvasGL to get an OpenGL context
++// TODO: Remove this ifdef, when OffscreenCanvasGL is implemened for AGL
++#ifndef __APPLE__
+             canvas = new OffscreenCanvasGL(32, 32);
++#else
++            VRS_NoImpl("OffscreenCanvasGL not implemented on Mac OS X.");
++#endif            
+         }
+ 
+         // save state of canvas
+Index: src/io/cubemapcreator.cpp
+===================================================================
+--- src/io/cubemapcreator.cpp	(revision 6691)
++++ src/io/cubemapcreator.cpp	(working copy)
+@@ -68,7 +68,11 @@
+         root->append(cubeCamera);
+         root->append(scene);
+         // create off screen canvas
++#ifndef __APPLE__
+         if(!canvas) canvas = new OffscreenCanvasGL(size, size);
++#else
++        VRS_NoImpl("OffscreenCanvasGL not implemented on Mac OS X.");
++#endif
+         if(canvas->contains(scene))
+         {
+             canvas->remove(scene);
+Index: macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj
+===================================================================
+--- macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj	(revision 6691)
++++ macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj	(working copy)
+@@ -1525,8 +1525,10 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				COPY_PHASE_STRIP = NO;
++				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+@@ -1538,19 +1540,20 @@
+ 				);
+ 				GCC_VERSION = 4.2;
+ 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+-				GCC_WARN_UNUSED_VARIABLE = YES;
++				GCC_WARN_UNUSED_VARIABLE = NO;
+ 				HEADER_SEARCH_PATHS = (
+ 					"../../3rd-party/fcollada",
+ 					"../../3rd-party/fcollada/LibXML/include",
+ 				);
+ 				INSTALL_PATH = /usr/local/lib;
+-				LD_DYLIB_INSTALL_NAME = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_3rd_party_debug.dylib";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = "";
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_3rd_party_debug;
+ 				SDKROOT = macosx10.5;
+ 				SKIP_INSTALL = NO;
++				STRIP_INSTALLED_PRODUCT = NO;
+ 				VERSION_INFO_SUFFIX = "";
+ 			};
+ 			name = Debug;
+@@ -1560,8 +1563,9 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				COPY_PHASE_STRIP = YES;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_PREPROCESSOR_DEFINITIONS = (
+@@ -1570,7 +1574,7 @@
+ 				);
+ 				GCC_VERSION = 4.2;
+ 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+-				GCC_WARN_UNUSED_VARIABLE = YES;
++				GCC_WARN_UNUSED_VARIABLE = NO;
+ 				HEADER_SEARCH_PATHS = (
+ 					"../../3rd-party/fcollada",
+ 					"../../3rd-party/fcollada/LibXML/include",
+@@ -1583,6 +1587,7 @@
+ 				PRODUCT_NAME = libvrs_3rd_party;
+ 				SDKROOT = macosx10.5;
+ 				SKIP_INSTALL = NO;
++				STRIP_INSTALLED_PRODUCT = YES;
+ 			};
+ 			name = Release;
+ 		};
+Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
+===================================================================
+--- macos/vrs_core/vrs_core.xcodeproj/project.pbxproj	(revision 6691)
++++ macos/vrs_core/vrs_core.xcodeproj/project.pbxproj	(working copy)
+@@ -668,6 +668,7 @@
+ 		29FBFFE00F497D3700FB0365 /* textureatlascreator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29FBFFBF0F497D3700FB0365 /* textureatlascreator.cpp */; };
+ 		29FBFFE10F497D3700FB0365 /* video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29FBFFC00F497D3700FB0365 /* video.cpp */; };
+ 		29FBFFE20F497D3700FB0365 /* videocontroller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29FBFFC10F497D3700FB0365 /* videocontroller.cpp */; };
++		E5E1949A0FDEEC1000010B62 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5E194990FDEEC1000010B62 /* OpenGL.framework */; };
+ /* End PBXBuildFile section */
+ 
+ /* Begin PBXCopyFilesBuildPhase section */
+@@ -1345,6 +1346,7 @@
+ 		29FBFFFE0F497DA100FB0365 /* cachesimplifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cachesimplifier.cpp; path = ../../src/vrs/cachesimplifier.cpp; sourceTree = SOURCE_ROOT; };
+ 		29FBFFFF0F497DA100FB0365 /* camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = camera.cpp; path = ../../src/vrs/camera.cpp; sourceTree = SOURCE_ROOT; };
+ 		D2AAC09D05546B4700DB518D /* libvrs_core_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_core_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
++		E5E194990FDEEC1000010B62 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+@@ -1354,6 +1356,7 @@
+ 			files = (
+ 				29FB03820F49841E00FB0365 /* AGL.framework in Frameworks */,
+ 				29ACBEF80F5AD23D000B2166 /* CoreFoundation.framework in Frameworks */,
++				E5E1949A0FDEEC1000010B62 /* OpenGL.framework in Frameworks */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+@@ -1382,6 +1385,7 @@
+ 		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
+ 			isa = PBXGroup;
+ 			children = (
++				E5E194990FDEEC1000010B62 /* OpenGL.framework */,
+ 				29ACBEF70F5AD23D000B2166 /* CoreFoundation.framework */,
+ 				29FB03810F49841E00FB0365 /* AGL.framework */,
+ 			);
+@@ -2922,15 +2926,17 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				COPY_PHASE_STRIP = NO;
++				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+ 				GCC_PREPROCESSOR_DEFINITIONS = UNICODE;
+ 				GCC_VERSION = 4.2;
+ 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+-				GCC_WARN_UNUSED_VARIABLE = YES;
++				GCC_WARN_UNUSED_VARIABLE = NO;
+ 				HEADER_SEARCH_PATHS = (
+ 					"../../3rd-party/zlib-1.2.3",
+ 					"../../3rd-party/fcollada/LibXML/include",
+@@ -2938,33 +2944,34 @@
+ 					"../../3rd-party/fcollada",
+ 					"../../3rd-party/jpeg-6b",
+ 					"../../3rd-party/libpng-1.2.34",
+-					/usr/X11/include/freetype2,
+-					/usr/include,
+-					/usr/X11/include,
+ 					"../../3rd-party/glew-1.5.1/include",
+ 					../../include,
+-					/usr/local/include,
+ 					/usr/X11/include/fontconfig,
++					/usr/X11/include/freetype2,
++					/opt/local/include,
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
+-				LIBRARY_SEARCH_PATHS = /usr/X11/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_core_debug.dylib";
++				LIBRARY_SEARCH_PATHS = (
++					../../lib,
++					/usr/X11/lib,
++					/opt/local/lib,
++				);
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+-					"-lX11",
+ 					"-lvrs_3rd_party_debug",
+-					"-lboost_system",
+-					"-lboost_filesystem",
+-					"-lboost_thread",
++					"-lboost_system-mt",
++					"-lboost_filesystem-mt",
++					"-lboost_thread-mt",
+ 					"-lfontconfig",
+ 					"-lm",
+-					"-lGL",
+ 					"-lfreetype",
+-					"-lGLU",
+ 				);
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_core_debug;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_INSTALLED_PRODUCT = NO;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -2973,14 +2980,14 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_PREPROCESSOR_DEFINITIONS = UNICODE;
+ 				GCC_VERSION = 4.2;
+ 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+-				GCC_WARN_UNUSED_VARIABLE = YES;
++				GCC_WARN_UNUSED_VARIABLE = NO;
+ 				HEADER_SEARCH_PATHS = (
+ 					"../../3rd-party/zlib-1.2.3",
+ 					"../../3rd-party/fcollada/LibXML/include",
+@@ -2988,33 +2995,33 @@
+ 					"../../3rd-party/fcollada",
+ 					"../../3rd-party/jpeg-6b",
+ 					"../../3rd-party/libpng-1.2.34",
+-					/usr/X11/include/freetype2,
+-					/usr/include,
+-					/usr/X11/include,
+ 					"../../3rd-party/glew-1.5.1/include",
+ 					../../include,
+-					/usr/local/include,
+ 					/usr/X11/include/fontconfig,
++					/usr/X11/include/freetype2,
++					/opt/local/include,
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
+-				LIBRARY_SEARCH_PATHS = /usr/X11/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = libvrs_core_debug.dylib;
++				LIBRARY_SEARCH_PATHS = (
++					../../lib,
++					/usr/X11/lib,
++					/opt/local/lib,
++				);
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+-					"-lX11",
+ 					"-lvrs_3rd_party",
+-					"-lboost_system",
+-					"-lboost_filesystem",
+-					"-lboost_thread",
++					"-lboost_system-mt",
++					"-lboost_filesystem-mt",
++					"-lboost_thread-mt",
+ 					"-lfontconfig",
+ 					"-lm",
+-					"-lGL",
+ 					"-lfreetype",
+-					"-lGLU",
+ 				);
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_core;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 			};
+ 			name = Release;
+ 		};
+Index: macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj
+===================================================================
+--- macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj	(revision 6691)
++++ macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj	(working copy)
+@@ -299,8 +299,10 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				COPY_PHASE_STRIP = NO;
++				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+@@ -312,6 +314,7 @@
+ 					"../../3rd-party/glew-1.5.1/include",
+ 				);
+ 				INSTALL_PATH = /usr/local/lib;
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_qt4_debug.dylib";
+ 				LIBRARY_SEARCH_PATHS = "";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+@@ -321,7 +324,8 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_qt4_debug;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_INSTALLED_PRODUCT = NO;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -330,8 +334,8 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_VERSION = 4.2;
+@@ -351,7 +355,7 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_qt4;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 			};
+ 			name = Release;
+ 		};
+Index: macos/vrs_glut/vrs_glut.xcodeproj/project.pbxproj
+===================================================================
+--- macos/vrs_glut/vrs_glut.xcodeproj/project.pbxproj	(revision 6691)
++++ macos/vrs_glut/vrs_glut.xcodeproj/project.pbxproj	(working copy)
+@@ -366,7 +366,7 @@
+ 			isa = PBXContainerItemProxy;
+ 			containerPortal = 29D5CCD70F838778009B997A /* glutavitest.xcodeproj */;
+ 			proxyType = 2;
+-			remoteGlobalIDString = 8D1107320486CEB800E47090 /* glutavitest.app */;
++			remoteGlobalIDString = 8D1107320486CEB800E47090;
+ 			remoteInfo = glutavitest;
+ 		};
+ /* End PBXContainerItemProxy section */
+@@ -1597,8 +1597,10 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				COPY_PHASE_STRIP = NO;
++				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+@@ -1619,7 +1621,8 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_glut_debug;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_INSTALLED_PRODUCT = NO;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -1628,8 +1631,8 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_VERSION = 4.2;
+@@ -1649,7 +1652,7 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_glut;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 			};
+ 			name = Release;
+ 		};
+Index: apps/qt4examples/qt4torus/qt4torus.xcodeproj/project.pbxproj
+===================================================================
+--- apps/qt4examples/qt4torus/qt4torus.xcodeproj/project.pbxproj	(revision 6691)
++++ apps/qt4examples/qt4torus/qt4torus.xcodeproj/project.pbxproj	(working copy)
+@@ -82,6 +82,7 @@
+ 				8D1107290486CEB800E47090 /* Resources */,
+ 				8D11072C0486CEB800E47090 /* Sources */,
+ 				8D11072E0486CEB800E47090 /* Frameworks */,
++				E5E19A350FDFA6A400010B62 /* Bundle VRS and boost */,
+ 			);
+ 			buildRules = (
+ 			);
+@@ -135,6 +136,21 @@
+ 			shellPath = /bin/sh;
+ 			shellScript = "mkdir $SOURCE_ROOT/qt_generated\nmoc -D__APPLE__ $SOURCE_ROOT/qt4torus.h -o $SOURCE_ROOT/qt_generated/qt4torus.moc";
+ 		};
++		E5E19A350FDFA6A400010B62 /* Bundle VRS and boost */ = {
++			isa = PBXShellScriptBuildPhase;
++			buildActionMask = 2147483647;
++			files = (
++			);
++			inputPaths = (
++			);
++			name = "Bundle VRS and boost";
++			outputPaths = (
++			);
++			runOnlyForDeploymentPostprocessing = 0;
++			shellPath = /bin/sh;
++			shellScript = "# Copy over the VRS dylibs\nmkdir $FRAMEWORKS_FOLDER_PATH\ncp ../../../lib/libvrs_3rd_party_debug.dylib \\\n   ../../../lib/libvrs_core_debug.dylib \\\n   ../../../lib/libvrs_qt4_debug.dylib \\\n   $FRAMEWORKS_FOLDER_PATH\n\n# Copy the required boost libraries\ncp /opt/local/lib/libboost_system-mt.dylib \\\n   /opt/local/lib/libboost_filesystem-mt.dylib \\\n   /opt/local/lib/libboost_thread-mt.dylib \\\n   $FRAMEWORKS_FOLDER_PATH\n\nINSTALL_PATH=@executable_path/../Frameworks\n\n# Fix the dylib install_names of boost in vrs_core.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_system-mt.dylib     $FRAMEWORKS_FOLDER_PATH/libboost_system-mt.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_filesystem-mt.dylib $FRAMEWORKS_FOLDER_PATH/libboost_filesystem-mt.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_thread-mt.dylib     $FRAMEWORKS_FOLDER_PATH/libboost_thread-mt.dylib\n\ninstall_name_tool -change /opt/local/lib/libboost_system-mt.dylib     $INSTALL_PATH/libboost_system-mt.dylib \\\n                  -change /opt/local/lib/libboost_filesystem-mt.dylib $INSTALL_PATH/libboost_filesystem-mt.dylib \\\n                  -change /opt/local/lib/libboost_thread-mt.dylib     $INSTALL_PATH/libboost_thread-mt.dylib \\\n\t\t\t    $FRAMEWORKS_FOLDER_PATH/libvrs_core_debug.dylib\n";
++			showEnvVarsInLog = 0;
++		};
+ /* End PBXShellScriptBuildPhase section */
+ 
+ /* Begin PBXSourcesBuildPhase section */
+@@ -189,7 +205,7 @@
+ 					../../../include,
+ 					"../../../3rd-party/glew-1.5.1/include",
+ 				);
+-				LIBRARY_SEARCH_PATHS = "";
++				LIBRARY_SEARCH_PATHS = ../../../lib;
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+ 					"-lvrs_core_debug",
+@@ -215,6 +231,7 @@
+ 					../../../include,
+ 					"../../../3rd-party/glew-1.5.1/include",
+ 				);
++				LIBRARY_SEARCH_PATHS = ../../../lib;
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+ 					"-lvrs_core",
