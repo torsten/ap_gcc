@@ -177,6 +177,23 @@ Index: src/opengl/fbo/framebufferobjectgl.cpp
          }
  
          // save state of canvas
+Index: src/environment/greenspace.cpp
+===================================================================
+--- src/environment/greenspace.cpp	(revision 6691)
++++ src/environment/greenspace.cpp	(working copy)
+@@ -348,8 +348,11 @@
+         if (hasPBuffer)
+             canvas = new PBufferCanvasGL(texWidth, texHeight);
+         else
++#ifndef __APPLE__
+             canvas = new OffscreenCanvasGL(texWidth, texHeight);
+-
++#else
++            VRS_NoImpl("OffscreenCanvasGL not implemented on Mac OS X.");            
++#endif
+         canvas->disableRedisplay();
+ 
+         canvas->append(grassScene);
 Index: src/io/cubemapcreator.cpp
 ===================================================================
 --- src/io/cubemapcreator.cpp	(revision 6691)
@@ -193,10 +210,74 @@ Index: src/io/cubemapcreator.cpp
          if(canvas->contains(scene))
          {
              canvas->remove(scene);
+Index: macos/vrs_gtk/vrs_gtk.xcodeproj/project.pbxproj
+===================================================================
+--- macos/vrs_gtk/vrs_gtk.xcodeproj/project.pbxproj	(revision 6691)
++++ macos/vrs_gtk/vrs_gtk.xcodeproj/project.pbxproj	(working copy)
+@@ -16,7 +16,7 @@
+ 			isa = PBXContainerItemProxy;
+ 			containerPortal = 29D6AC5F0F7A7F7D002466B4 /* gtk3ds.xcodeproj */;
+ 			proxyType = 2;
+-			remoteGlobalIDString = 8D1107320486CEB800E47090 /* gtk3ds.app */;
++			remoteGlobalIDString = 8D1107320486CEB800E47090;
+ 			remoteInfo = gtk3ds;
+ 		};
+ /* End PBXContainerItemProxy section */
 Index: macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj
 ===================================================================
 --- macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj	(revision 6691)
 +++ macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj	(working copy)
+@@ -648,7 +648,7 @@
+ 		29FBFC790F49743D00FB0365 /* stat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = stat.c; path = "../../3rd-party/qhull/stat.c"; sourceTree = SOURCE_ROOT; };
+ 		29FBFC7A0F49743D00FB0365 /* user.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = user.c; path = "../../3rd-party/qhull/user.c"; sourceTree = SOURCE_ROOT; };
+ 		29FBFD800F4977C600FB0365 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
+-		D2AAC09D05546B4700DB518D /* libvrs_3rd_party_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_3rd_party_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
++		D2AAC09D05546B4700DB518D /* libvrs_3rd_party.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_3rd_party.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+@@ -667,7 +667,7 @@
+ 		034768DDFF38A45A11DB9C8B /* Products */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				D2AAC09D05546B4700DB518D /* libvrs_3rd_party_debug.dylib */,
++				D2AAC09D05546B4700DB518D /* libvrs_3rd_party.dylib */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
+@@ -1153,7 +1153,7 @@
+ 			);
+ 			name = vrs_3rd_party;
+ 			productName = libvrs_3rd_party;
+-			productReference = D2AAC09D05546B4700DB518D /* libvrs_3rd_party_debug.dylib */;
++			productReference = D2AAC09D05546B4700DB518D /* libvrs_3rd_party.dylib */;
+ 			productType = "com.apple.product-type.library.dynamic";
+ 		};
+ /* End PBXNativeTarget section */
+@@ -1504,7 +1504,8 @@
+ 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+ 				GCC_MODEL_TUNING = G5;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_STYLE = all;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -1512,11 +1513,10 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+ 				GCC_MODEL_TUNING = G5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 				STRIP_INSTALLED_PRODUCT = YES;
+-				STRIP_STYLE = "non-global";
++				STRIP_STYLE = all;
+ 			};
+ 			name = Release;
+ 		};
 @@ -1525,8 +1525,10 @@
  			buildSettings = {
  				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
@@ -220,15 +301,17 @@ Index: macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj
  					"../../3rd-party/fcollada",
  					"../../3rd-party/fcollada/LibXML/include",
  				);
- 				INSTALL_PATH = /usr/local/lib;
+-				INSTALL_PATH = /usr/local/lib;
 -				LD_DYLIB_INSTALL_NAME = "";
++				INSTALL_PATH = "";
 +				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_3rd_party_debug.dylib";
  				ONLY_ACTIVE_ARCH = YES;
  				OTHER_LDFLAGS = "";
  				PREBINDING = NO;
  				PRODUCT_NAME = libvrs_3rd_party_debug;
  				SDKROOT = macosx10.5;
- 				SKIP_INSTALL = NO;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
 +				STRIP_INSTALLED_PRODUCT = NO;
  				VERSION_INFO_SUFFIX = "";
  			};
@@ -245,7 +328,7 @@ Index: macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj
  				DSTROOT = /;
  				GCC_C_LANGUAGE_STANDARD = c99;
  				GCC_PREPROCESSOR_DEFINITIONS = (
-@@ -1570,7 +1574,7 @@
+@@ -1570,19 +1574,21 @@
  				);
  				GCC_VERSION = 4.2;
  				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -254,10 +337,18 @@ Index: macos/vrs_3rd_party/vrs_3rd_party.xcodeproj/project.pbxproj
  				HEADER_SEARCH_PATHS = (
  					"../../3rd-party/fcollada",
  					"../../3rd-party/fcollada/LibXML/include",
-@@ -1583,6 +1587,7 @@
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_3rd_party.dylib";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = "";
+ 				PREBINDING = NO;
+ 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
  				PRODUCT_NAME = libvrs_3rd_party;
  				SDKROOT = macosx10.5;
- 				SKIP_INSTALL = NO;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
 +				STRIP_INSTALLED_PRODUCT = YES;
  			};
  			name = Release;
@@ -274,10 +365,12 @@ Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
  /* End PBXBuildFile section */
  
  /* Begin PBXCopyFilesBuildPhase section */
-@@ -1345,6 +1346,7 @@
+@@ -1344,7 +1345,8 @@
+ 		29FBFFFD0F497DA100FB0365 /* cache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cache.cpp; path = ../../src/vrs/cache.cpp; sourceTree = SOURCE_ROOT; };
  		29FBFFFE0F497DA100FB0365 /* cachesimplifier.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cachesimplifier.cpp; path = ../../src/vrs/cachesimplifier.cpp; sourceTree = SOURCE_ROOT; };
  		29FBFFFF0F497DA100FB0365 /* camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = camera.cpp; path = ../../src/vrs/camera.cpp; sourceTree = SOURCE_ROOT; };
- 		D2AAC09D05546B4700DB518D /* libvrs_core_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_core_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+-		D2AAC09D05546B4700DB518D /* libvrs_core_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_core_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
++		D2AAC09D05546B4700DB518D /* libvrs_core.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_core.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 +		E5E194990FDEEC1000010B62 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
  /* End PBXFileReference section */
  
@@ -290,6 +383,15 @@ Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
  			);
  			runOnlyForDeploymentPostprocessing = 0;
  		};
+@@ -1363,7 +1366,7 @@
+ 		034768DDFF38A45A11DB9C8B /* Products */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				D2AAC09D05546B4700DB518D /* libvrs_core_debug.dylib */,
++				D2AAC09D05546B4700DB518D /* libvrs_core.dylib */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
 @@ -1382,6 +1385,7 @@
  		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
  			isa = PBXGroup;
@@ -298,7 +400,42 @@ Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
  				29ACBEF70F5AD23D000B2166 /* CoreFoundation.framework */,
  				29FB03810F49841E00FB0365 /* AGL.framework */,
  			);
-@@ -2922,15 +2926,17 @@
+@@ -2194,7 +2198,7 @@
+ 			);
+ 			name = vrs_core;
+ 			productName = libvrs_core;
+-			productReference = D2AAC09D05546B4700DB518D /* libvrs_core_debug.dylib */;
++			productReference = D2AAC09D05546B4700DB518D /* libvrs_core.dylib */;
+ 			productType = "com.apple.product-type.library.dynamic";
+ 		};
+ /* End PBXNativeTarget section */
+@@ -2897,7 +2901,8 @@
+ 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+ 				GCC_MODEL_TUNING = G5;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_STYLE = all;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -2905,13 +2910,13 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
++				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				FRAMEWORK_SEARCH_PATHS = (
+ 					"$(inherited)",
+ 					"\"$(SRCROOT)/../../lib/framework\"",
+ 				);
+ 				GCC_MODEL_TUNING = G5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 				STRIP_INSTALLED_PRODUCT = YES;
+ 				STRIP_STYLE = "non-global";
+ 			};
+@@ -2922,15 +2927,17 @@
  			buildSettings = {
  				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
  				CONFIGURATION_BUILD_DIR = ../../lib;
@@ -319,7 +456,7 @@ Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
  				HEADER_SEARCH_PATHS = (
  					"../../3rd-party/zlib-1.2.3",
  					"../../3rd-party/fcollada/LibXML/include",
-@@ -2938,33 +2944,34 @@
+@@ -2938,33 +2945,34 @@
  					"../../3rd-party/fcollada",
  					"../../3rd-party/jpeg-6b",
  					"../../3rd-party/libpng-1.2.34",
@@ -367,7 +504,7 @@ Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
  			};
  			name = Debug;
  		};
-@@ -2973,14 +2980,14 @@
+@@ -2973,14 +2981,14 @@
  			buildSettings = {
  				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
  				CONFIGURATION_BUILD_DIR = ../../lib;
@@ -385,7 +522,7 @@ Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
  				HEADER_SEARCH_PATHS = (
  					"../../3rd-party/zlib-1.2.3",
  					"../../3rd-party/fcollada/LibXML/include",
-@@ -2988,33 +2995,33 @@
+@@ -2988,33 +2996,33 @@
  					"../../3rd-party/fcollada",
  					"../../3rd-party/jpeg-6b",
  					"../../3rd-party/libpng-1.2.34",
@@ -402,7 +539,7 @@ Index: macos/vrs_core/vrs_core.xcodeproj/project.pbxproj
 -				INSTALL_PATH = /usr/local/lib;
 -				LIBRARY_SEARCH_PATHS = /usr/X11/lib;
 +				INSTALL_PATH = "";
-+				LD_DYLIB_INSTALL_NAME = libvrs_core_debug.dylib;
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_core.dylib";
 +				LIBRARY_SEARCH_PATHS = (
 +					../../lib,
 +					/usr/X11/lib,
@@ -436,7 +573,60 @@ Index: macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj
 ===================================================================
 --- macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj	(revision 6691)
 +++ macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj	(working copy)
-@@ -299,8 +299,10 @@
+@@ -55,7 +55,7 @@
+ 		298ABC530F4C0FE600F4659D /* qt4winapplication.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = qt4winapplication.cpp; path = ../../src/qt4/qt4winapplication.cpp; sourceTree = SOURCE_ROOT; };
+ 		298ABD330F4C1EA100F4659D /* QtOpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QtOpenGL.framework; path = /Library/Frameworks/QtOpenGL.framework; sourceTree = "<absolute>"; };
+ 		298ABD760F4C240100F4659D /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AGL.framework; path = /System/Library/Frameworks/AGL.framework; sourceTree = "<absolute>"; };
+-		D2AAC09D05546B4700DB518D /* libvrs_qt4_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_qt4_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
++		D2AAC09D05546B4700DB518D /* libvrs_qt4.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_qt4.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+@@ -76,7 +76,7 @@
+ 		034768DDFF38A45A11DB9C8B /* Products */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				D2AAC09D05546B4700DB518D /* libvrs_qt4_debug.dylib */,
++				D2AAC09D05546B4700DB518D /* libvrs_qt4.dylib */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
+@@ -177,7 +177,7 @@
+ 			);
+ 			name = vrs_qt4;
+ 			productName = libvrs_qt4;
+-			productReference = D2AAC09D05546B4700DB518D /* libvrs_qt4_debug.dylib */;
++			productReference = D2AAC09D05546B4700DB518D /* libvrs_qt4.dylib */;
+ 			productType = "com.apple.product-type.library.dynamic";
+ 		};
+ /* End PBXNativeTarget section */
+@@ -278,7 +278,9 @@
+ 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+ 				GCC_MODEL_TUNING = G5;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+-				SKIP_INSTALL = NO;
++				INSTALL_PATH = "";
++				SKIP_INSTALL = YES;
++				STRIP_STYLE = all;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -286,11 +288,11 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
++				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				GCC_MODEL_TUNING = G5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 				STRIP_INSTALLED_PRODUCT = YES;
+-				STRIP_STYLE = "non-global";
++				STRIP_STYLE = all;
+ 			};
+ 			name = Release;
+ 		};
+@@ -299,8 +301,10 @@
  			buildSettings = {
  				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
  				CONFIGURATION_BUILD_DIR = ../../lib;
@@ -449,15 +639,17 @@ Index: macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj
  				DSTROOT = /;
  				GCC_C_LANGUAGE_STANDARD = c99;
  				GCC_OPTIMIZATION_LEVEL = 0;
-@@ -312,6 +314,7 @@
+@@ -311,7 +315,8 @@
+ 					../../include,
  					"../../3rd-party/glew-1.5.1/include",
  				);
- 				INSTALL_PATH = /usr/local/lib;
+-				INSTALL_PATH = /usr/local/lib;
++				INSTALL_PATH = "";
 +				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_qt4_debug.dylib";
  				LIBRARY_SEARCH_PATHS = "";
  				ONLY_ACTIVE_ARCH = YES;
  				OTHER_LDFLAGS = (
-@@ -321,7 +324,8 @@
+@@ -321,7 +326,8 @@
  				PREBINDING = NO;
  				PRODUCT_NAME = libvrs_qt4_debug;
  				SDKROOT = macosx10.5;
@@ -467,7 +659,7 @@ Index: macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj
  			};
  			name = Debug;
  		};
-@@ -330,8 +334,8 @@
+@@ -330,8 +336,8 @@
  			buildSettings = {
  				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
  				CONFIGURATION_BUILD_DIR = ../../lib;
@@ -478,7 +670,17 @@ Index: macos/vrs_qt4/vrs_qt4.xcodeproj/project.pbxproj
  				DSTROOT = /;
  				GCC_C_LANGUAGE_STANDARD = c99;
  				GCC_VERSION = 4.2;
-@@ -351,7 +355,7 @@
+@@ -341,7 +347,8 @@
+ 					../../include,
+ 					"../../3rd-party/glew-1.5.1/include",
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_qt4.dylib";
+ 				LIBRARY_SEARCH_PATHS = "";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+@@ -351,7 +358,7 @@
  				PREBINDING = NO;
  				PRODUCT_NAME = libvrs_qt4;
  				SDKROOT = macosx10.5;
@@ -500,7 +702,59 @@ Index: macos/vrs_glut/vrs_glut.xcodeproj/project.pbxproj
  			remoteInfo = glutavitest;
  		};
  /* End PBXContainerItemProxy section */
-@@ -1597,8 +1597,10 @@
+@@ -425,7 +425,7 @@
+ 		29D286930F6591E7007D7940 /* glutcollada.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = glutcollada.xcodeproj; path = ../../apps/glutexamples/glutcollada/glutcollada.xcodeproj; sourceTree = SOURCE_ROOT; };
+ 		29D2869C0F6591F6007D7940 /* glutx3d.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = glutx3d.xcodeproj; path = ../../apps/glutexamples/glutx3d/glutx3d.xcodeproj; sourceTree = SOURCE_ROOT; };
+ 		29D5CCD70F838778009B997A /* glutavitest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = glutavitest.xcodeproj; path = ../../apps/glutexamples/glutavitest/glutavitest.xcodeproj; sourceTree = SOURCE_ROOT; };
+-		D2AAC09D05546B4700DB518D /* libvrs_glut_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_glut_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
++		D2AAC09D05546B4700DB518D /* libvrs_glut.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_glut.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+@@ -443,7 +443,7 @@
+ 		034768DDFF38A45A11DB9C8B /* Products */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				D2AAC09D05546B4700DB518D /* libvrs_glut_debug.dylib */,
++				D2AAC09D05546B4700DB518D /* libvrs_glut.dylib */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
+@@ -968,7 +968,7 @@
+ 			);
+ 			name = vrs_glut;
+ 			productName = libvrs_glut;
+-			productReference = D2AAC09D05546B4700DB518D /* libvrs_glut_debug.dylib */;
++			productReference = D2AAC09D05546B4700DB518D /* libvrs_glut.dylib */;
+ 			productType = "com.apple.product-type.library.dynamic";
+ 		};
+ /* End PBXNativeTarget section */
+@@ -1576,7 +1576,8 @@
+ 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+ 				GCC_MODEL_TUNING = G5;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_STYLE = all;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -1584,11 +1585,11 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
++				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				GCC_MODEL_TUNING = G5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 				STRIP_INSTALLED_PRODUCT = YES;
+-				STRIP_STYLE = "non-global";
++				STRIP_STYLE = all;
+ 			};
+ 			name = Release;
+ 		};
+@@ -1597,8 +1598,10 @@
  			buildSettings = {
  				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
  				CONFIGURATION_BUILD_DIR = ../../lib;
@@ -513,7 +767,17 @@ Index: macos/vrs_glut/vrs_glut.xcodeproj/project.pbxproj
  				DSTROOT = /;
  				GCC_C_LANGUAGE_STANDARD = c99;
  				GCC_OPTIMIZATION_LEVEL = 0;
-@@ -1619,7 +1621,8 @@
+@@ -1609,7 +1612,8 @@
+ 					../../include,
+ 					"../../3rd-party/glew-1.5.1/include",
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_glut_debug.dylib";
+ 				LIBRARY_SEARCH_PATHS = "";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+@@ -1619,7 +1623,8 @@
  				PREBINDING = NO;
  				PRODUCT_NAME = libvrs_glut_debug;
  				SDKROOT = macosx10.5;
@@ -523,7 +787,7 @@ Index: macos/vrs_glut/vrs_glut.xcodeproj/project.pbxproj
  			};
  			name = Debug;
  		};
-@@ -1628,8 +1631,8 @@
+@@ -1628,8 +1633,8 @@
  			buildSettings = {
  				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
  				CONFIGURATION_BUILD_DIR = ../../lib;
@@ -534,9 +798,274 @@ Index: macos/vrs_glut/vrs_glut.xcodeproj/project.pbxproj
  				DSTROOT = /;
  				GCC_C_LANGUAGE_STANDARD = c99;
  				GCC_VERSION = 4.2;
-@@ -1649,7 +1652,7 @@
+@@ -1639,7 +1644,8 @@
+ 					../../include,
+ 					"../../3rd-party/glew-1.5.1/include",
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_glut.dylib";
+ 				LIBRARY_SEARCH_PATHS = "";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+@@ -1649,7 +1655,7 @@
  				PREBINDING = NO;
  				PRODUCT_NAME = libvrs_glut;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 			};
+ 			name = Release;
+ 		};
+Index: macos/vrs_x3d/vrs_x3d.xcodeproj/project.pbxproj
+===================================================================
+--- macos/vrs_x3d/vrs_x3d.xcodeproj/project.pbxproj	(revision 6691)
++++ macos/vrs_x3d/vrs_x3d.xcodeproj/project.pbxproj	(working copy)
+@@ -403,7 +403,7 @@
+ 		29D876790F643AF8008A91C5 /* x3drenderingcomponent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = x3drenderingcomponent.cpp; path = ../../src/x3d/x3drenderingcomponent.cpp; sourceTree = SOURCE_ROOT; };
+ 		29D8767A0F643AF8008A91C5 /* x3dshapecomponent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = x3dshapecomponent.cpp; path = ../../src/x3d/x3dshapecomponent.cpp; sourceTree = SOURCE_ROOT; };
+ 		29D8767B0F643AF8008A91C5 /* x3dtexturecomponent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = x3dtexturecomponent.cpp; path = ../../src/x3d/x3dtexturecomponent.cpp; sourceTree = SOURCE_ROOT; };
+-		D2AAC09D05546B4700DB518D /* libvrs_x3d_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_x3d_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
++		D2AAC09D05546B4700DB518D /* libvrs_x3d.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_x3d.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+@@ -420,7 +420,7 @@
+ 		034768DDFF38A45A11DB9C8B /* Products */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				D2AAC09D05546B4700DB518D /* libvrs_x3d_debug.dylib */,
++				D2AAC09D05546B4700DB518D /* libvrs_x3d.dylib */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
+@@ -914,7 +914,7 @@
+ 			);
+ 			name = vrs_x3d;
+ 			productName = libvrs_x3d;
+-			productReference = D2AAC09D05546B4700DB518D /* libvrs_x3d_debug.dylib */;
++			productReference = D2AAC09D05546B4700DB518D /* libvrs_x3d.dylib */;
+ 			productType = "com.apple.product-type.library.dynamic";
+ 		};
+ /* End PBXNativeTarget section */
+@@ -1484,7 +1484,8 @@
+ 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+ 				GCC_MODEL_TUNING = G5;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_STYLE = all;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -1492,11 +1493,11 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
++				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				GCC_MODEL_TUNING = G5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 				STRIP_INSTALLED_PRODUCT = YES;
+-				STRIP_STYLE = "non-global";
++				STRIP_STYLE = all;
+ 			};
+ 			name = Release;
+ 		};
+@@ -1505,8 +1506,10 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				COPY_PHASE_STRIP = NO;
++				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+@@ -1514,17 +1517,16 @@
+ 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+ 				GCC_WARN_UNUSED_VARIABLE = YES;
+ 				HEADER_SEARCH_PATHS = (
+-					/usr/local/include,
+-					/usr/include,
+ 					../../include,
+-					"../../3rd-party/xerces-3.0/include",
+ 					"../../3rd-party/glew-1.5.1/include",
++					/opt/local/include,
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
+-				LIBRARY_SEARCH_PATHS = "";
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_x3d_debug.dylib";
++				LIBRARY_SEARCH_PATHS = /opt/local/lib;
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+-					"-lboost_thread",
++					"-lboost_thread-mt",
+ 					"-lxerces-c",
+ 					"-lvrs_core_debug",
+ 					"-lvrs_3rd_party_debug",
+@@ -1532,7 +1534,8 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_x3d_debug;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_INSTALLED_PRODUCT = NO;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -1541,33 +1544,32 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_VERSION = 4.2;
+ 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+ 				GCC_WARN_UNUSED_VARIABLE = YES;
+ 				HEADER_SEARCH_PATHS = (
+-					/usr/local/include,
+-					/usr/include,
+ 					../../include,
+-					"../../3rd-party/xerces-3.0/include",
+ 					"../../3rd-party/glew-1.5.1/include",
++					/opt/local/include,
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
+-				LIBRARY_SEARCH_PATHS = "";
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_x3d.dylib";
++				LIBRARY_SEARCH_PATHS = /opt/local/lib;
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+-					"-lboost_thread",
++					"-lboost_thread-mt",
+ 					"-lxerces-c",
++					"-lvrs_core",
+ 					"-lvrs_3rd_party",
+-					"-lvrs_core",
+ 				);
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_x3d;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 			};
+ 			name = Release;
+ 		};
+Index: macos/vrs_environment/vrs_environment.xcodeproj/project.pbxproj
+===================================================================
+--- macos/vrs_environment/vrs_environment.xcodeproj/project.pbxproj	(revision 6691)
++++ macos/vrs_environment/vrs_environment.xcodeproj/project.pbxproj	(working copy)
+@@ -48,7 +48,7 @@
+ 		29A6A4010F5551F20022C976 /* watersurfacerayintersector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = watersurfacerayintersector.cpp; path = ../../src/environment/watersurfacerayintersector.cpp; sourceTree = SOURCE_ROOT; };
+ 		29A6A4020F5551F20022C976 /* watersurfacesimplifiergl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = watersurfacesimplifiergl.cpp; path = ../../src/environment/watersurfacesimplifiergl.cpp; sourceTree = SOURCE_ROOT; };
+ 		29A6A4030F5551F20022C976 /* watersurfacetechnique.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = watersurfacetechnique.cpp; path = ../../src/environment/watersurfacetechnique.cpp; sourceTree = SOURCE_ROOT; };
+-		D2AAC09D05546B4700DB518D /* libvrs_environment_debug.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_environment_debug.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
++		D2AAC09D05546B4700DB518D /* libvrs_environment.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libvrs_environment.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+@@ -66,7 +66,7 @@
+ 		034768DDFF38A45A11DB9C8B /* Products */ = {
+ 			isa = PBXGroup;
+ 			children = (
+-				D2AAC09D05546B4700DB518D /* libvrs_environment_debug.dylib */,
++				D2AAC09D05546B4700DB518D /* libvrs_environment.dylib */,
+ 			);
+ 			name = Products;
+ 			sourceTree = "<group>";
+@@ -141,7 +141,7 @@
+ 			);
+ 			name = vrs_environment;
+ 			productName = libvrs_environment;
+-			productReference = D2AAC09D05546B4700DB518D /* libvrs_environment_debug.dylib */;
++			productReference = D2AAC09D05546B4700DB518D /* libvrs_environment.dylib */;
+ 			productType = "com.apple.product-type.library.dynamic";
+ 		};
+ /* End PBXNativeTarget section */
+@@ -200,7 +200,8 @@
+ 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+ 				GCC_MODEL_TUNING = G5;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_STYLE = all;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -208,11 +209,13 @@
+ 			isa = XCBuildConfiguration;
+ 			buildSettings = {
+ 				ALWAYS_SEARCH_USER_PATHS = NO;
+-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
++				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				GCC_MODEL_TUNING = G5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
+ 				STRIP_INSTALLED_PRODUCT = YES;
+-				STRIP_STYLE = "non-global";
++				STRIP_STYLE = all;
+ 			};
+ 			name = Release;
+ 		};
+@@ -221,8 +224,10 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = ../../lib;
+-				DEPLOYMENT_LOCATION = YES;
+-				DEPLOYMENT_POSTPROCESSING = YES;
++				COPY_PHASE_STRIP = NO;
++				DEBUG_INFORMATION_FORMAT = dwarf;
++				DEPLOYMENT_LOCATION = NO;
++				DEPLOYMENT_POSTPROCESSING = NO;
+ 				DSTROOT = /;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_OPTIMIZATION_LEVEL = 0;
+@@ -233,7 +238,8 @@
+ 					../../include,
+ 					"../../3rd-party/glew-1.5.1/include",
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_environment_debug.dylib";
+ 				LIBRARY_SEARCH_PATHS = "";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+@@ -243,7 +249,8 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_environment_debug;
+ 				SDKROOT = macosx10.5;
+-				SKIP_INSTALL = NO;
++				SKIP_INSTALL = YES;
++				STRIP_INSTALLED_PRODUCT = NO;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -263,7 +270,8 @@
+ 					../../include,
+ 					"../../3rd-party/glew-1.5.1/include",
+ 				);
+-				INSTALL_PATH = /usr/local/lib;
++				INSTALL_PATH = "";
++				LD_DYLIB_INSTALL_NAME = "@executable_path/../Frameworks/libvrs_environment.dylib";
+ 				LIBRARY_SEARCH_PATHS = "";
+ 				ONLY_ACTIVE_ARCH = YES;
+ 				OTHER_LDFLAGS = (
+@@ -273,7 +281,7 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = libvrs_environment;
  				SDKROOT = macosx10.5;
 -				SKIP_INSTALL = NO;
 +				SKIP_INSTALL = YES;
@@ -571,13 +1100,22 @@ Index: apps/qt4examples/qt4torus/qt4torus.xcodeproj/project.pbxproj
 +			);
 +			runOnlyForDeploymentPostprocessing = 0;
 +			shellPath = /bin/sh;
-+			shellScript = "# Copy over the VRS dylibs\nmkdir $FRAMEWORKS_FOLDER_PATH\ncp ../../../lib/libvrs_3rd_party_debug.dylib \\\n   ../../../lib/libvrs_core_debug.dylib \\\n   ../../../lib/libvrs_qt4_debug.dylib \\\n   $FRAMEWORKS_FOLDER_PATH\n\n# Copy the required boost libraries\ncp /opt/local/lib/libboost_system-mt.dylib \\\n   /opt/local/lib/libboost_filesystem-mt.dylib \\\n   /opt/local/lib/libboost_thread-mt.dylib \\\n   $FRAMEWORKS_FOLDER_PATH\n\nINSTALL_PATH=@executable_path/../Frameworks\n\n# Fix the dylib install_names of boost in vrs_core.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_system-mt.dylib     $FRAMEWORKS_FOLDER_PATH/libboost_system-mt.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_filesystem-mt.dylib $FRAMEWORKS_FOLDER_PATH/libboost_filesystem-mt.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_thread-mt.dylib     $FRAMEWORKS_FOLDER_PATH/libboost_thread-mt.dylib\n\ninstall_name_tool -change /opt/local/lib/libboost_system-mt.dylib     $INSTALL_PATH/libboost_system-mt.dylib \\\n                  -change /opt/local/lib/libboost_filesystem-mt.dylib $INSTALL_PATH/libboost_filesystem-mt.dylib \\\n                  -change /opt/local/lib/libboost_thread-mt.dylib     $INSTALL_PATH/libboost_thread-mt.dylib \\\n\t\t\t    $FRAMEWORKS_FOLDER_PATH/libvrs_core_debug.dylib\n";
++			shellScript = "if [[ $CONFIGURATION = 'Debug' ]]; then\n  DEBUG_SUFFIX=_debug\nelse\n  DEBUG_SUFFIX=\nfi\n\n# Copy over the VRS dylibs\nmkdir $FRAMEWORKS_FOLDER_PATH\ncp ../../../lib/libvrs_3rd_party$DEBUG_SUFFIX.dylib \\\n   ../../../lib/libvrs_core$DEBUG_SUFFIX.dylib \\\n   ../../../lib/libvrs_qt4$DEBUG_SUFFIX.dylib \\\n   $FRAMEWORKS_FOLDER_PATH\n\n# Copy the required boost libraries\ncp /opt/local/lib/libboost_system-mt.dylib \\\n   /opt/local/lib/libboost_filesystem-mt.dylib \\\n   /opt/local/lib/libboost_thread-mt.dylib \\\n   $FRAMEWORKS_FOLDER_PATH\n\nINSTALL_PATH=@executable_path/../Frameworks\n\n# Fix the dylib install_names of boost in vrs_core.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_system-mt.dylib     $FRAMEWORKS_FOLDER_PATH/libboost_system-mt.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_filesystem-mt.dylib $FRAMEWORKS_FOLDER_PATH/libboost_filesystem-mt.dylib\ninstall_name_tool -id $INSTALL_PATH/libboost_thread-mt.dylib     $FRAMEWORKS_FOLDER_PATH/libboost_thread-mt.dylib\n\ninstall_name_tool -change /opt/local/lib/libboost_system-mt.dylib     $INSTALL_PATH/libboost_system-mt.dylib \\\n                  -change /opt/local/lib/libboost_filesystem-mt.dylib $INSTALL_PATH/libboost_filesystem-mt.dylib \\\n                  -change /opt/local/lib/libboost_thread-mt.dylib     $INSTALL_PATH/libboost_thread-mt.dylib \\\n\t\t\t    $FRAMEWORKS_FOLDER_PATH/libvrs_core$DEBUG_SUFFIX.dylib\n";
 +			showEnvVarsInLog = 0;
 +		};
  /* End PBXShellScriptBuildPhase section */
  
  /* Begin PBXSourcesBuildPhase section */
-@@ -189,7 +205,7 @@
+@@ -181,6 +197,8 @@
+ 			buildSettings = {
+ 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+ 				CONFIGURATION_BUILD_DIR = .;
++				COPY_PHASE_STRIP = NO;
++				DEBUG_INFORMATION_FORMAT = dwarf;
+ 				GCC_C_LANGUAGE_STANDARD = c99;
+ 				GCC_VERSION = 4.2;
+ 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+@@ -189,7 +207,7 @@
  					../../../include,
  					"../../../3rd-party/glew-1.5.1/include",
  				);
@@ -586,7 +1124,15 @@ Index: apps/qt4examples/qt4torus/qt4torus.xcodeproj/project.pbxproj
  				ONLY_ACTIVE_ARCH = YES;
  				OTHER_LDFLAGS = (
  					"-lvrs_core_debug",
-@@ -215,6 +231,7 @@
+@@ -199,6 +217,7 @@
+ 				PREBINDING = NO;
+ 				PRODUCT_NAME = qt4torus_debug;
+ 				SDKROOT = macosx10.5;
++				STRIP_INSTALLED_PRODUCT = NO;
+ 			};
+ 			name = Debug;
+ 		};
+@@ -215,6 +234,7 @@
  					../../../include,
  					"../../../3rd-party/glew-1.5.1/include",
  				);
