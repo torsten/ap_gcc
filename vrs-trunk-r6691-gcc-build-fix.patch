@@ -1,0 +1,31 @@
+Index: include/vrs/container/lineariterator.h
+===================================================================
+--- include/vrs/container/lineariterator.h	(revision 6691)
++++ include/vrs/container/lineariterator.h	(working copy)
+@@ -70,7 +70,7 @@
+     void setStartValue(const T& startValue) {
+         if(startValue_ != startValue) {
+             startValue_ = startValue;
+-            modified();
++            SharedObj::modified();
+         }
+     }
+     const T& getStartValue() const { return startValue_; }
+@@ -78,7 +78,7 @@
+     void setEndValue(const T& endValue) {
+         if(endValue_ != endValue) {
+             endValue_ = endValue;
+-            modified();
++            SharedObj::modified();
+         }
+     }
+     const T& getEndValue() const { return endValue_; }
+@@ -88,7 +88,7 @@
+     void setSize(unsigned int size) {
+         if(size_ != size) {
+             size_ = size;
+-            modified();
++            SharedObj::modified();
+         }
+     }
+     virtual T get(unsigned int index) const {
