@@ -1,0 +1,18 @@
+Index: src/qt4/qt4canvas.cpp
+===================================================================
+--- src/qt4/qt4canvas.cpp	(revision 6691)
++++ src/qt4/qt4canvas.cpp	(working copy)
+@@ -163,10 +163,11 @@
+         s_drawableStack.pop_back();
+         s_displayStack.pop_back();
+ 
+-        if(
++        if((
+             (context  != glXGetCurrentContext())  ||
+             (drawable != glXGetCurrentDrawable()) ||
+-            (display  != glXGetCurrentDisplay())
++            (display  != glXGetCurrentDisplay())) &&
++	    (context != 0 && drawable != 0 && display != 0)
+         ) {
+             glXMakeCurrent(display, drawable, context);
+         }
