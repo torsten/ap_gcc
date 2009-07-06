@@ -1,0 +1,13 @@
+ * alle funktionesadressen auslesen: nm -apP <exe>
+   * sinnvolle zeilen filtern
+ * mac: otool -l <exe> nach dem ersten load befehl _text._TEXT, 
+   * offset, address auslesen
+ * linux: objdump -h <exe> _text segment -> VMA == LMA (address), FileOff (offset)
+ * functionsadresse - addresse + offset = in file position of function
+   * addiere offset für __penter call
+ * nops schreiben
+ 
+ * gdb:
+   * x /10i /10bx __function
+   * --write (aber nur auf linux)
+   * set *((char*)_Z7barFuncv) = 0x90
