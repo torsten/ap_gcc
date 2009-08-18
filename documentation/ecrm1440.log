@@ -1,0 +1,48 @@
+This is METAFONT, Version 2.71828 (Web2C 7.5.4) (base=mf 2009.8.18)  18 AUG 2009 18:16
+**\mode:=ljfour; mag:=1; nonstopmode; input ecrm1440
+(/var/tmp/texfonts/source/jknappen/ec/ecrm1440.mf
+(/opt/local/share/texmf-dist/fonts/source/jknappen/ec/exbase.mf)
+(/opt/local/share/texmf-dist/fonts/source/jknappen/ec/ecrm.mf
+(/opt/local/share/texmf-dist/fonts/source/jknappen/ec/exroman.mf
+ Ok (/opt/local/share/texmf-dist/fonts/source/jknappen/ec/exaccess.mf
+ Ok) (/opt/local/share/texmf-dist/fonts/source/jknappen/ec/expseudo.mf
+ Ok) (/opt/local/share/texmf-dist/fonts/source/jknappen/ec/exruwest.mf
+ Ok [192] [193] [194] [195] [196] [197] [198] [199] [200] [201] [202] [203]
+[204] [205] [206] [207] [208] [209] [210] [211] [212] [213] [214] [215]
+[216] [217] [218] [219] [220] [221] [222] [223])
+(/opt/local/share/texmf-dist/fonts/source/jknappen/ec/exrlwest.mf
+ Ok [224] [225] [226] [227] [228] [229] [230] [231] [232] [233] [234] [235]
+[236] [237] [238] [239] [240] [241] [242] [243] [244] [245] [246] [247]
+[248] [249] [250] [251] [252] [253] [254] [255])
+(/opt/local/share/texmf-dist/fonts/source/jknappen/ec/exrueast.mf
+ Ok [128] [129] [130] [131] [132] [133] [134] [135] [136] [137] [138] [139]
+[140] [141] [142] [143] [144] [145] [146] [147] [148] [149]
+! Interruption.
+<to be read again> 
+                   displaying
+endchar->...ule);fi.chardx:=w;shipit;if.displaying
+                                                  >0:makebox(screenrule);sho...
+l.753 penlabels(1,2,3,4,5,6,7,8,9,10,11); endchar
+                                                 ;
+? 
+! Emergency stop.
+<to be read again> 
+                   displaying
+endchar->...ule);fi.chardx:=w;shipit;if.displaying
+                                                  >0:makebox(screenrule);sho...
+l.753 penlabels(1,2,3,4,5,6,7,8,9,10,11); endchar
+                                                 ;
+End of file on the terminal!
+
+ 
+Here is how much of METAFONT's memory you used:
+ 571 strings out of 5276
+ 6357 string characters out of 70044
+ 43262 words of memory out of 1000000
+ 1482 symbolic tokens out of 9500
+ 13i,79n,0r,23p,227b stack positions out of 300i,300n,1000r,150p,200000b
+ 
+(You used 20w,12h,5d,4i,0l,0k,0e,0p metric file positions
+  out of 256w,16h,16d,64i,15000l,2500k,256e,60p)
+Font metrics written on ecrm1440.tfm.
+Output written on ecrm1440.600gf (86 characters, 29328 bytes).
