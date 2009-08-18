@@ -1,1 +1,9 @@
-\section{Challenges}
+\section{Challenges} This section describes challenges we had to face while porting the CGA framework to Mac OS X and Linux.
+
+\subsection{Complexity} The first challenge was the complexity of CGA. The main application itself contains more than 70.000 lines of code. The whole distribution consists of about 170.000 lines of code.
+
+\subsection{Platform specifics} The whole CGA tool chain contains lots of platform specific mechanisms like binary patching, collecting of information from the dynamic linker... 
+
+\subsection{Compiler specifics} The main instrumentation mechanism if based on a feature provided by the compiler. The Microsoft Visual Studio can insert calls to instrumentation function right after a function was called and right before a function returns. The mechanism in general is the same using gcc, but...
+
+\subsection{IDE specifics} While introducing the CMake based build system in CGA...

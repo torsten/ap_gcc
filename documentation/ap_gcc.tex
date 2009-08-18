@@ -1,10 +1,10 @@
 \documentclass[]{article}
 
 \usepackage{pdfsync}
- 
+
 % Use utf-8 encoding for foreign characters
-\usepackage[utf8]{inputenc}
-\usepackage[german]{babel}
+\usepackage[utf8]{inputenc} 
+\usepackage[german]{babel} 
 \usepackage[T1]{fontenc} 
 
 % Setup for fullpage use
@@ -14,15 +14,12 @@
 %
 % Running Headers and footers
 %\usepackage{fancyhdr}
-
 % Multipart figures
 %\usepackage{subfigure}
-
 % More symbols
 %\usepackage{amsmath}
 %\usepackage{amssymb}
 %\usepackage{latexsym}
-
 % Surround parts of graphics with box
 \usepackage{boxedminipage}
 
@@ -42,38 +39,93 @@
 %\pdfoutput=1 % we are running PDFLaTeX
 %\pdftrue
 %\fi
+\ifpdf 
+\usepackage[pdftex]{graphicx} \else 
+\usepackage{graphicx} \fi
 
-\ifpdf
-\usepackage[pdftex]{graphicx}
-\else
-\usepackage{graphicx}
-\fi
-
-
-\title{CGA tool chain on unix systems}
-\author{ Torsten Becker, Frederik Rudeck, Robert Timm  }
+\title{AP GCC - CGA tool chain on unix systems} 
+\author{ Torsten Becker, Frederik Rudeck, Robert Timm }
 
 \date{2009-08-01}
 
 \begin{document}
 
-\ifpdf
-\DeclareGraphicsExtensions{.pdf, .jpg, .tif}
-\else
-\DeclareGraphicsExtensions{.eps, .jpg}
-\fi
+\ifpdf \DeclareGraphicsExtensions{.pdf, .jpg, .tif} \else \DeclareGraphicsExtensions{.eps, .jpg} \fi
 
 \maketitle
-
-
 \begin{abstract}
-The CGA - Call Graph Analyzer - system developed at the HPI was indented for Windows based systems only. We ported this tool chain to Mac OS X and Linux systems.
-
+	The CGA - Call Graph Analyzer - system developed at the HPI was indented for Windows based systems only. We ported this tool chain to Mac OS X and Linux systems.
 \end{abstract}
 
-\input{chapters/introduction}
-\input{chapters/challenges}
+% ------------------------------------------------------------------------------
+% TODO remove me
 
-\bibliographystyle{plain}
-\bibliography{}
-\end{document}
+\paragraph{TEMPLATE}
+\begin{verbatim}
+Inhaltsvorlage zur Dokumentation – Seminar Softwarevisualisierung SoSe09
+Arbeitspaket: Linux/MacOS-Portierung von CGA
+Portierung von CGA nach Linux/MacOS
+Hindernisse bei der Portierung
+todo
+Coding Richtlinien zur zukünftigen Vermeidung von Cross-Plattform Problemen
+Todo
+Cross-Plattform Buildsystem CMake
+Nutzung von CMake unter Windows, Linux und MacOS
+todo
+CGA Coding Richtlinien zur Nutzung von CMake
+Todo
+Portierung des Windows-basierten Faktextraktionsmechanismus Callmon nach Linux/MacOS
+Analysierbare Softwaresysteme – Notwendige Voraussetzungen
+Mit welcher GCC Version muss das zu analysierende System gebaut sein?
+Gibt es bestimmte Systemlibs, gegen die das zu analysierende System gelinkt werden muss?
+Sind Inkompatibilitäten zu erwarten mit irgendwelchen Systemlibs?
+…
+Todo
+Workflow der Callmon Toolchain
+Todo
+Einbindung von 3rd Party Tools 
+Welche Datenquelle für Debug-Informationen wird verwendet? Gibt es Alternativen? Warum die eine gewählt?
+Wie werden die Funktionseinsprungsaddressen und Funktionsausstiegsadressen bestimmt? Gibt es Alternativen? Welche Unterschiede gibt es bei Linux und Mac?; Todo
+Implementierung der Callmon Bibliothek unter Linux/MacOS
+Wie ist der Callmon-Kern nach Linux/MacOS portiert worden? Wie wurde der Start/Stopp-Mechanismus übertragen? Wie der Mutex-freie Ereignissammelmechenismus und wie die Ereignis-Serialisierung? …
+Todo
+Tutorial: Kontrollfluss-Analyse von Audacity
+Charakterisierung des Softwaresystems (LOC, etc.)
+Todo
+Exemplarisches Vorgehen bei der Faktextraktion (und anschließenden Visualisierung)
+Todo
+\end{verbatim}
+
+%-------------------------------------------------------------------------------
+
+\newpage
+
+\tableofcontents 
+\newpage
+
+\input{chapters/introduction} 
+\newpage
+
+\input{chapters/challenges} 
+\newpage
+
+\input{chapters/results} 
+\newpage
+
+\input{chapters/constraints} 
+\newpage
+
+\input{chapters/guidelines} 
+\newpage
+
+\input{chapters/cmake} 
+\newpage
+
+\input{chapters/unixfe} 
+\newpage
+
+\input{chapters/tutorial} 
+\newpage
+
+\bibliographystyle{plain} 
+\bibliography{} \end{document} 

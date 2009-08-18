@@ -1,0 +1,66 @@
+\section{Guidelines for GCC and Visual C++ compatibility at the same time}
+
+\subsection{Paths} To be valid on Windows and Unix platforms, a path \textbf{must not} contain backslashes as separators. The only valid path separator for both platforms is the slash symbol \textbf{/}. So a valid path looks like this: 
+\begin{verbatim}
+	"this/is/a/valid/path" 
+\end{verbatim}
+
+\subsection{Const correctness} 
+
+\subsection{Templates} The gcc's parser for template type name behaves slightly different than the Visual C++ ones. For example this is a valid definition in Visual C++: 
+\begin{verbatim}
+	std::list<std::pair<int, int>> myListOfIntPairs; 
+\end{verbatim}
+
+This is \textbf{not} valid while compiling with gcc. You have to separate \textbf{>} symbols using a space, else, gcc will throw a parser error. So this is the valid equivalent, which compiles on gcc and Visual C++: 
+\begin{verbatim}
+	std::list<std::pair<int, int> > myListOfIntPairs; 
+\end{verbatim}
+
+\subsection{Member function declarations} When declaring a member function inside the class statement, some people tent to prepend the name of the class to the method name. This may increase readability when inheriting several levels:
+\begin{verbatim}
+    class A {
+    public:
+        virtual void A::funcFromA();
+    };
+    
+    class B : public A {
+    public:
+        virtual void A::funcFromA();
+        virtual void B::funcFromB();
+    };
+    
+    class C : public B {
+    public:
+        virtual void A::funcFromA();
+        virtual void B::funcFromB();
+        virtual void C::funcFromC();
+    };
+\end{verbatim}
+
+The problem is, this \textbf{is not} a valid syntax for gcc. You \textbf{must not} prepend the class name to the member function. So the above declaration is valid for gcc like this:
+\begin{verbatim}
+    class A {
+    public:
+        virtual void funcFromA();
+    };
+    
+    class B : public A {
+    public:
+        virtual void funcFromA();
+        virtual void funcFromB();
+    };
+    
+    class C : public B {
+    public:
+        virtual void funcFromA();
+        virtual void funcFromB();
+        virtual void funcFromC();
+    };
+\end{verbatim}
+
+\subsection{windows.h} You \textbf{must not} include windows.h because all the types and functions provided by windows.h are highly Windows specific and will not compile nor run on other platforms. In general you will find the same functionality in QtCore. When using QtCore's functionality, it is easy to compile and run the code on other platforms supported by Qt.
+
+\subsection{Qt is the key} 
+
+
