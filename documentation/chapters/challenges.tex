@@ -1,9 +1,31 @@
 \section{Challenges} This section describes challenges we had to face while porting the CGA framework to Mac OS X and Linux.
 
-\subsection{Complexity} The first challenge was the complexity of CGA. The main application itself contains more than 70.000 lines of code. The whole distribution consists of about 170.000 lines of code.
+\subsection{Complexity} The first challenge was the complexity of CGA. The main application itself contains more than 70.000 lines of code. The whole distribution consists of about 170.000 lines of code. 
 
-\subsection{Platform specifics} The whole CGA tool chain contains lots of platform specific mechanisms like binary patching, collecting of information from the dynamic linker... 
+Furthermore, analyzing an application using CGA requires several distinct steps, like adjusting the build process of the application that is getting analyzed, patching the applications binary and post processing the data collected while running the application. Porting this tool chain to another operating system requieres a deep understanding of all those processes on one hand and on the other hand a good idea how to realize all those details on the target platform.
 
-\subsection{Compiler specifics} The main instrumentation mechanism if based on a feature provided by the compiler. The Microsoft Visual Studio can insert calls to instrumentation function right after a function was called and right before a function returns. The mechanism in general is the same using gcc, but...
+\subsection{Platform specifics} The whole CGA tool chain contains lots of platform specific mechanisms like binary patching and collecting of information from the dynamic linker. A big challenge was to find ways to get all the information needed on both target platforms. 
 
-\subsection{IDE specifics} While introducing the CMake based build system in CGA...
+Parts of our implementation rely on GCC and gdb, which are both available on Linux and Mac OS X. Then provided us with a point of abstraction to hide platform specific details. But even with those tools, certain thing behave differently on both platforms. Writing into a binary with gdb does not work on Mac OS X, but does work on Linux. Function call adresses reported by the GCC instrument functions mechanism may be wrong on Linux. Just to name two examples. 
+
+\subsection{Compiler specifics} The main instrumentation mechanism if based on a feature provided by the compiler. The Microsoft Visual C++ can insert calls to instrumentation functions right after a function was called and right before a function returns. The mechanism in general is the same using GCC, but the differences appear when it comes to details. 
+
+On Visual C++, it is possible to compile a function \emph{naked}, which removes function prolog and epilog. The feature enables the function to have a certain view on the stack, because the implementation itself is responsable for creating the stack frame, adjusting stack pointers and so on. GCC as well does provide this feature, but, it is not supported on x86 platforms. So we had to work around this situation.
+
+\subsection{IDE specifics} While introducing the CMake based build system in CGA... 
+\begin{itemize}
+	
+	\item complex project structure
+	
+	\item custom build commands
+	
+	\item qt custom build commands
+	
+	\item files removed from build
+	
+	\item precompiled headers
+	
+	\item default includes
+	
+	\item const??? 
+\end{itemize}

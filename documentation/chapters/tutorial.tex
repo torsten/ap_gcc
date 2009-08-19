@@ -4,7 +4,7 @@
 \subsubsection{Pitfalls}
 
 \paragraph{Compile with -finstrument-functions} 
-\paragraph{Compile with -fno-inline} This disables the inlining of functions which is done by the compiler automatically to optimize execution speed by eliminating function call overhead. Since we are profiling on a function execution level, we cannot profile inlined function, so all the functions inlined by the compiler cannot appear in the call graph. To be sure this cannot happen, use -fno-inline as a gcc option. You might skip this if you want. You still might get good profiling results for the calls you are interested in, but you have been warned! Take care!
+\paragraph{Compile with -fno-inline} This disables the inlining of functions which is done by the compiler automatically to optimize execution speed by eliminating function call overhead. Since we are profiling on a function execution level, we cannot profile inlined function, so all the functions inlined by the compiler cannot appear in the call graph. To be sure this cannot happen, use -fno-inline as a GCC option. You might skip this if you want. You still might get good profiling results for the calls you are interested in, but you have been warned! Take care!
 
 \paragraph{Link unixcallmonlib as the last library} ...
 

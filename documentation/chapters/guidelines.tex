@@ -1,4 +1,5 @@
-\section{Guidelines for GCC and Visual C++ compatibility at the same time}
+\section{Guideline - Code that builds on GCC and Visual C++}
+This section contains a list of the most common problems we found in the code of CGA and their solution.
 
 \subsection{Paths} To be valid on Windows and Unix platforms, a path \textbf{must not} contain backslashes as separators. The only valid path separator for both platforms is the slash symbol \textbf{/}. So a valid path looks like this: 
 \begin{verbatim}
@@ -7,12 +8,12 @@
 
 \subsection{Const correctness} 
 
-\subsection{Templates} The gcc's parser for template type name behaves slightly different than the Visual C++ ones. For example this is a valid definition in Visual C++: 
+\subsection{Templates} The GCC's parser for template type name behaves slightly different than the Visual C++ ones. For example this is a valid definition in Visual C++: 
 \begin{verbatim}
 	std::list<std::pair<int, int>> myListOfIntPairs; 
 \end{verbatim}
 
-This is \textbf{not} valid while compiling with gcc. You have to separate \textbf{>} symbols using a space, else, gcc will throw a parser error. So this is the valid equivalent, which compiles on gcc and Visual C++: 
+This is \textbf{not} valid while compiling with GCC. You have to separate \textbf{>} symbols using a space, else, GCC will throw a parser error. So this is the valid equivalent, which compiles on GCC and Visual C++: 
 \begin{verbatim}
 	std::list<std::pair<int, int> > myListOfIntPairs; 
 \end{verbatim}
@@ -38,7 +39,7 @@ This is \textbf{not} valid while compiling with gcc. You have to separate \textb
     };
 \end{verbatim}
 
-The problem is, this \textbf{is not} a valid syntax for gcc. You \textbf{must not} prepend the class name to the member function. So the above declaration is valid for gcc like this:
+The problem is, this \textbf{is not} a valid syntax for GCC. You \textbf{must not} prepend the class name to the member function. So the above declaration is valid for GCC like this:
 \begin{verbatim}
     class A {
     public:
@@ -59,8 +60,47 @@ The problem is, this \textbf{is not} a valid syntax for gcc. You \textbf{must no
     };
 \end{verbatim}
 
-\subsection{windows.h} You \textbf{must not} include windows.h because all the types and functions provided by windows.h are highly Windows specific and will not compile nor run on other platforms. In general you will find the same functionality in QtCore. When using QtCore's functionality, it is easy to compile and run the code on other platforms supported by Qt.
+\subsection{windows.h} You \textbf{must not} include windows.h because all the types and functions provided by windows.h are highly Windows specific and will not compile nor run on other platforms. In general you will find the same functionality in QtCore. When using QtCore's functionality, it is easy to compile and run the code on all the platforms supported by Qt.
 
-\subsection{Qt is the key} 
+\subsection{for each() vs. foreach() vs. for()} Visual C++ provides a construct which looks like this:
+\begin{verbatim}
+    for each(int i in myIntList) {
+        // loop code here
+    }
+\end{verbatim}
+This \textbf{is not} available on GCC. There this cannot compile on both compilers. But the for each way is handy, so a cross compiler alternative is again the usage of Qt. Qt provides a construct like this:
+\begin{verbatim}
+    foreach(int i, myIntList) {
+        // loop code here
+    }
+\end{verbatim}
+Using this construct the resulting code is again cross compiler compatible and stays readable and handy.
 
+\subsection{stdext vs. \_\_gnu\_cxx vs. tr1} Datatypes like the hash\_map are currently not part of the C++ Standard Template Library. But compiler vendors provide extensions in their own namespaces. Visual C++ provides this in the stdext namespace, GCC up to version 4.2 in the \_\_gnu\_cxx namespace. Since version 4.3 of GCC, the hash\_map was moved to the namespace std::tr1 and renamed to unordered\_map. The new C++ standard C++0x is on it's way and will contain the unordered\_map. So it is very likely that a new namespace will contain unordered\_map. For now, we found the following solution to the problem:
+\begin{verbatim}
+    #if __GNUC__ == 4 && __GNUC_MINOR__ >= 2
+    #  if __GNUC_MINOR__ == 2
+    #    include <ext/hash_map>
+    #    include <ext/hash_set>
+    #    define HASHMAP_TYPE      __gnu_cxx::hash_map
+    #    define HASHMULTIMAP_TYPE __gnu_cxx::hash_multimap
+    #    define HASHSET_TYPE      __gnu_cxx::hash_set
+    #    define HASHMAP_NAMESPACE_OPEN  namespace __gnu_cxx {
+    #    define HASHMAP_NAMESPACE_CLOSE }
+    #  else // __GNUC_MINOR__ > 2
+    #    include <tr1/unordered_map>
+    #    include <tr1/unordered_set>
+    #    define HASHMAP_TYPE      std::tr1::unordered_map
+    #    define HASHMULTIMAP_TYPE std::tr1::unordered_multimap
+    #    define HASHSET_TYPE      std::tr1::unordered_set
+    #    define HASHMAP_NAMESPACE_OPEN  namespace std { namespace tr1 {
+    #    define HASHMAP_NAMESPACE_CLOSE }}
+    #  endif
+    #else // __GNUC__ != 4 && __GNUC_MINOR__ < 2
+    #  error "unsupported gcc version, need gcc 4.2 or higher"
+    #endif
+\end{verbatim}
+Yes, this is just the GCC part, to include Visual C++ too, it needs still a bit more code, which is as well included in our branch of CGA. So to keep the cross compiler compatibility the marcos from above should be used. 
+
+\subsection{Qt is the key} Qt provides a great way to write platform independent code. QtCore contains lots of things which replace pthreads\_create() or WaitForSingleObject() which else would break cross platform compatibility. 
 
