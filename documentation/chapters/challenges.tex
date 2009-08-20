@@ -8,6 +8,8 @@ Furthermore, analyzing an application using CGA requires several distinct steps,
 
 Parts of our implementation rely on GCC and GDB, which are both available on Linux and Mac OS X. They provided us with a good point of abstraction to hide platform specific details. But even with those tools, certain thing behave differently on both platforms. Writing into a binary with GDB does not work on Mac OS X, but does work on Linux. Function call addresses reported by the GCC instrument function mechanism may be wrong on Linux. Just to name two examples. 
 
+TODO DLLMAIN
+
 \subsection{Compiler specifics} The main instrumentation mechanism if based on a feature provided by the compiler. The Microsoft Visual C++ can insert calls to instrumentation functions right after a function was called and right before a function returns. The mechanism in general is the same using GCC, but the differences appear when it comes to details. 
 
 On Visual C++, it is possible to compile a function \emph{naked}, which removes functions prolog and epilog and lets the programmer implement them himself. This feature enables the function to have a certain view on the stack, because the implementation itself is responsable for creating the stack frame, adjusting stack pointers and so on. So as a \emph{naked} function starts, it has the same view on the stack as the function which called it. This is great for the implementation of the instrumentation functions. GCC as well does provide this feature, but, it is not supported on x86 platforms. So we had to work around this situation.
@@ -17,5 +19,9 @@ Some data types, like hash\_map, which are not part of the C++ Standard, have di
 \subsection{IDE specifics} While introducing the CMake based build system in CGA, we found ourselves in front of a complex and highly platform specific Visual Studio solution with lots of inter project dependencies. It contained lots of custom build steps, like Qt preprocessing steps (uic and moc) and post build steps to get, for example, unit testing data in place.
 
 Furthermore the solution was a grown structure, so several obsolete code files still exist in the source tree, but are excluded from the build process. Includes defined using the Visual Studio project were missing in the source files which actually needed them. Just to name a few pitfalls.
+
+\subsection{Backport to Windows}
+
+\subsection{Mergen}
 
 \subsection{Qt did a great job} In general, we have to say, that Qt did a great job. Without the platform independence of not only all the GUI code, it would not have been possible to port CGA in such a short time periode. 

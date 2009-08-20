@@ -37,7 +37,7 @@ int main() {
 }
 \end{verbatim}
 
-\subsection{References to temporary} When returning references to objects, it is very important to ensure where the object is living. If a function returns a reference to one of their local variables, this is very dangerous. An example:
+\subsection{Returning references to temporaries} When returning references to objects, it is very important to ensure where the object is living. If a function returns a reference to one of their local variables, this is very dangerous. An example:
 \begin{verbatim}
 #include <QtCore/QString>
 
@@ -196,3 +196,6 @@ Yes, this is just the GCC part, to include Visual C++ too, it needs still a bit 
 
 \subsection{Qt is the key} Qt provides a great way to write platform independent code. QtCore contains lots of things which replace pthreads\_create() or WaitForSingleObject() which else would break cross platform compatibility. 
 
+
+
+TODO callmon platform specific, rest should use Qt

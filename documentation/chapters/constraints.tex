@@ -1,4 +1,6 @@
-\section{Constraints} This section describes some version constrains for the tools we are using. 
+% TODO rename this file
+
+\section{Requirements} This section describes some version requirements for the tools we are using. 
 
 \subsection{Summary}
 \begin{itemize}
@@ -19,8 +21,6 @@ We do not depend on any functionality which was introduced in version 6.3, so ou
 
 But extending our implementation to handle more versions of GDB is as easy as fixing the regular expressions parsing the GDB output.
 
-\subsection{Binutils} On Linux we are using \emph{objdump} and \emph{nm} from the binutils distribution. All our code was tested with version 2.19.1 of these tools. 
-
-On Mac OS X we a using \emph{otool} and \emph{nm} as provided by Apple bundled with XCode version 3.1.3.
+\subsection{Binutils} On Linux we are using \emph{objdump} and \emph{nm} from the binutils distribution. All our code was tested with version 2.19.1 of these tools. On Mac OS X we a using \emph{otool} and \emph{nm} as provided by Apple bundled with XCode version 3.1.3.
 
 Like in the GDB case we are parsing the output using regular expressions, so changes in the output format of these tools are likely to break our parsing, but again, only some regular expression need to be adjusted.
