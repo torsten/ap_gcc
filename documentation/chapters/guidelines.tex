@@ -1,106 +1,198 @@
-\section{Guideline - Code that builds on GCC and Visual C++}
-This section contains a list of the most common problems we found in the code of CGA and their solution.
+\section{Guideline - Code that builds on GCC and Visual C++} This section contains a list of the most common problems we found in the code of CGA. As well we provide a solution to these problems, which make the code compile and run on Visual C++ and GCC.
 
-\subsection{Paths} To be valid on Windows and Unix platforms, a path \textbf{must not} contain backslashes as separators. The only valid path separator for both platforms is the slash symbol \textbf{/}. So a valid path looks like this: 
+\subsection{Paths} To be valid on Windows and Unix platforms, a path \textbf{must not} contain any backslashes as separators. The only valid path separator for both platforms is the slash symbol \textbf{/}. So a valid path looks like this: 
 \begin{verbatim}
-	"this/is/a/valid/path" 
+"this/is/a/valid/path" 
+\end{verbatim}
+This applies to paths needed by the programs logic, for like opening files, and as well for paths used in the build process, for example includes.
+
+\subsection{Const correctness} There were several parts of the code which made use of the keyword \emph{const} in an invalid way. We still do not know, how this was able to compile on the Visual C++ compiler. 
+
+When declaring something \emph{const}, it \textbf{must not} be changed or given to a function that expects a non const, because this function could potentially change it. An example:
+\begin{verbatim}
+#include <QtCore/QString>
+
+void changeMyString(QString& p_string) {
+  p_string.replace("foo", "bar");
+}
+
+QString changeMyConstString(const QString& p_string) {
+  QString result = p_string;
+  result.replace("foo", "bar");
+  return result;
+}
+
+int main() {
+  const QString myString("foobarlalala");
+
+  // THIS IS INVALID and will cause a COMPILER ERROR
+  // error: invalid initialization of reference 
+  //        of type ‘QString&’ from expression of type ‘const QString’
+  changeMyString(myString);
+
+  // this is ok
+  QString newString = changeMyConstString(myString);
+
+  return 0;
+}
 \end{verbatim}
 
-\subsection{Const correctness} 
-
-\subsection{Templates} The GCC's parser for template type name behaves slightly different than the Visual C++ ones. For example this is a valid definition in Visual C++: 
+\subsection{References to temporary} When returning references to objects, it is very important to ensure where the object is living. If a function returns a reference to one of their local variables, this is very dangerous. An example:
 \begin{verbatim}
-	std::list<std::pair<int, int>> myListOfIntPairs; 
+#include <QtCore/QString>
+
+QString& giveMeAString() {
+  QString localString("foobarlalala");
+
+  // throws a compiler warning
+  // warning: reference to local variable ‘localString’ returned
+  return localString;
+}
+
+int main() {
+  // this is dangerous because the scope of the variable localString was 
+  // just left as the function returns. So myStringRef is invalid.
+  QString& myStringRef = giveMeAString();
+
+  return 0;
+}
+\end{verbatim}
+So always check who \emph{owns} the original object the reference if pointing to and when does the original object get destructed.
+
+
+\subsection{Templates with templated template arguments} The GCC's parser for template type name behaves slightly different than the Visual C++ ones. For example this is a valid definition in Visual C++: 
+\begin{verbatim}
+std::list<std::pair<int, int>> myListOfIntPairs; 
 \end{verbatim}
 
-This is \textbf{not} valid while compiling with GCC. You have to separate \textbf{>} symbols using a space, else, GCC will throw a parser error. So this is the valid equivalent, which compiles on GCC and Visual C++: 
+This is \textbf{not} valid while compiling with GCC. You have to separate both \textbf{>} symbols using a space, else, GCC will throw a parser error. So this is the valid equivalent, which compiles on GCC and Visual C++: 
 \begin{verbatim}
-	std::list<std::pair<int, int> > myListOfIntPairs; 
+std::list<std::pair<int, int> > myListOfIntPairs; 
+\end{verbatim}
+
+\subsection{Templates using types that depend on the template parameter} When using datatypes in template classes, that depend on the template parameter, GCC needs the additional keyword \emph{typename}. An example:
+
+\begin{verbatim}
+#include <list>
+
+template<class T>
+class MyListWrapper {
+  // typename is needed here, because the final type of 
+  // std::list<T>::iterator depends on the template parameter T
+  typedef typename std::list<T>::iterator WrappedListIteratorType;
+};
+\end{verbatim}
+GCC's error output is not quite clear here (like in so many cases, especially when it comes to templates). Omitting the keyword \emph{typename} in the above code would throw the following compile error:
+\begin{verbatim}
+type ‘std::list<T, std::allocator<_CharT> >’ is not derived from type ‘MyListWrapper<T>’
+\end{verbatim}
+
+\subsection{Template types as parameter with default value} I would consider this a GCC parser bug. The following code does not compile on GCC:
+\begin{verbatim}
+class MyClass {
+  MyClass(std::map<int, int> p_map = std::map<int, int>()) { }
+};
+\end{verbatim}
+The error message shows that something seems to go really wrong in the parser:
+\begin{verbatim}
+wrong number of template arguments (1, should be 4)
+\end{verbatim}
+The solution is to add brackets around the default argument like this:
+\begin{verbatim}
+class MyClass {
+  MyClass(std::map<int, int> p_map = (std::map<int, int>())) { }
+};
+\end{verbatim}
+Interesting here is, that the error does not occur, if the type has only one obligatory template parameter like std::list for example. So this code compiles fine even without additional brackets on GCC:
+\begin{verbatim}
+class MyClass {
+  MyClass(std::list<int> p_map = std::list<int>()) { }
+};
 \end{verbatim}
 
 \subsection{Member function declarations} When declaring a member function inside the class statement, some people tent to prepend the name of the class to the method name. This may increase readability when inheriting several levels:
 \begin{verbatim}
-    class A {
-    public:
-        virtual void A::funcFromA();
-    };
-    
-    class B : public A {
-    public:
-        virtual void A::funcFromA();
-        virtual void B::funcFromB();
-    };
-    
-    class C : public B {
-    public:
-        virtual void A::funcFromA();
-        virtual void B::funcFromB();
-        virtual void C::funcFromC();
-    };
+class A {
+public:
+  virtual void A::funcFromA();
+};
+
+class B : public A {
+public:
+  virtual void A::funcFromA();
+  virtual void B::funcFromB();
+};
+
+class C : public B {
+public:
+  virtual void A::funcFromA();
+  virtual void B::funcFromB();
+  virtual void C::funcFromC();
+};
 \end{verbatim}
 
 The problem is, this \textbf{is not} a valid syntax for GCC. You \textbf{must not} prepend the class name to the member function. So the above declaration is valid for GCC like this:
 \begin{verbatim}
-    class A {
-    public:
-        virtual void funcFromA();
-    };
-    
-    class B : public A {
-    public:
-        virtual void funcFromA();
-        virtual void funcFromB();
-    };
-    
-    class C : public B {
-    public:
-        virtual void funcFromA();
-        virtual void funcFromB();
-        virtual void funcFromC();
-    };
+class A {
+public:
+  virtual void funcFromA();
+};
+
+class B : public A {
+public:
+  virtual void funcFromA();
+  virtual void funcFromB();
+};
+
+class C : public B {
+public:
+  virtual void funcFromA();
+  virtual void funcFromB();
+  virtual void funcFromC();
+};
 \end{verbatim}
 
 \subsection{windows.h} You \textbf{must not} include windows.h because all the types and functions provided by windows.h are highly Windows specific and will not compile nor run on other platforms. In general you will find the same functionality in QtCore. When using QtCore's functionality, it is easy to compile and run the code on all the platforms supported by Qt.
 
 \subsection{for each() vs. foreach() vs. for()} Visual C++ provides a construct which looks like this:
 \begin{verbatim}
-    for each(int i in myIntList) {
-        // loop code here
-    }
+for each(int i in myIntList) {
+  // loop code here
+}
 \end{verbatim}
-This \textbf{is not} available on GCC. There this cannot compile on both compilers. But the for each way is handy, so a cross compiler alternative is again the usage of Qt. Qt provides a construct like this:
+This \textbf{is not} available on GCC. Therefor this cannot compile on both compilers. But the for each way is handy, so a cross compiler alternative is again the usage of Qt. Qt provides a construct like this:
 \begin{verbatim}
-    foreach(int i, myIntList) {
-        // loop code here
-    }
+foreach(int i, myIntList) {
+  // loop code here
+}
 \end{verbatim}
-Using this construct the resulting code is again cross compiler compatible and stays readable and handy.
+Using this construct the resulting code is again cross compiler compatible and stays readable and handy. An alternative is always to use the vanilla C++ for(;;) construct. 
 
 \subsection{stdext vs. \_\_gnu\_cxx vs. tr1} Datatypes like the hash\_map are currently not part of the C++ Standard Template Library. But compiler vendors provide extensions in their own namespaces. Visual C++ provides this in the stdext namespace, GCC up to version 4.2 in the \_\_gnu\_cxx namespace. Since version 4.3 of GCC, the hash\_map was moved to the namespace std::tr1 and renamed to unordered\_map. The new C++ standard C++0x is on it's way and will contain the unordered\_map. So it is very likely that a new namespace will contain unordered\_map. For now, we found the following solution to the problem:
 \begin{verbatim}
-    #if __GNUC__ == 4 && __GNUC_MINOR__ >= 2
-    #  if __GNUC_MINOR__ == 2
-    #    include <ext/hash_map>
-    #    include <ext/hash_set>
-    #    define HASHMAP_TYPE      __gnu_cxx::hash_map
-    #    define HASHMULTIMAP_TYPE __gnu_cxx::hash_multimap
-    #    define HASHSET_TYPE      __gnu_cxx::hash_set
-    #    define HASHMAP_NAMESPACE_OPEN  namespace __gnu_cxx {
-    #    define HASHMAP_NAMESPACE_CLOSE }
-    #  else // __GNUC_MINOR__ > 2
-    #    include <tr1/unordered_map>
-    #    include <tr1/unordered_set>
-    #    define HASHMAP_TYPE      std::tr1::unordered_map
-    #    define HASHMULTIMAP_TYPE std::tr1::unordered_multimap
-    #    define HASHSET_TYPE      std::tr1::unordered_set
-    #    define HASHMAP_NAMESPACE_OPEN  namespace std { namespace tr1 {
-    #    define HASHMAP_NAMESPACE_CLOSE }}
-    #  endif
-    #else // __GNUC__ != 4 && __GNUC_MINOR__ < 2
-    #  error "unsupported gcc version, need gcc 4.2 or higher"
-    #endif
+#if __GNUC__ == 4 && __GNUC_MINOR__ >= 2
+#  if __GNUC_MINOR__ == 2
+#    include <ext/hash_map>
+#    include <ext/hash_set>
+#    define HASHMAP_TYPE      __gnu_cxx::hash_map
+#    define HASHMULTIMAP_TYPE __gnu_cxx::hash_multimap
+#    define HASHSET_TYPE      __gnu_cxx::hash_set
+#    define HASHMAP_NAMESPACE_OPEN  namespace __gnu_cxx {
+#    define HASHMAP_NAMESPACE_CLOSE }
+#  else // __GNUC_MINOR__ > 2
+#    include <tr1/unordered_map>
+#    include <tr1/unordered_set>
+#    define HASHMAP_TYPE      std::tr1::unordered_map
+#    define HASHMULTIMAP_TYPE std::tr1::unordered_multimap
+#    define HASHSET_TYPE      std::tr1::unordered_set
+#    define HASHMAP_NAMESPACE_OPEN  namespace std { namespace tr1 {
+#    define HASHMAP_NAMESPACE_CLOSE }}
+#  endif
+#else // __GNUC__ != 4 && __GNUC_MINOR__ < 2
+#  error "unsupported gcc version, need gcc 4.2 or higher"
+#endif
 \end{verbatim}
-Yes, this is just the GCC part, to include Visual C++ too, it needs still a bit more code, which is as well included in our branch of CGA. So to keep the cross compiler compatibility the marcos from above should be used. 
+Yes, this is just the GCC part, to include Visual C++ too, it needs still a bit more code, which is as well included in our branch of CGA. So to keep the cross compiler compatibility the marcos defined above should be used. 
 
 \subsection{Qt is the key} Qt provides a great way to write platform independent code. QtCore contains lots of things which replace pthreads\_create() or WaitForSingleObject() which else would break cross platform compatibility. 
 
