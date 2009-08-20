@@ -6,7 +6,7 @@
 
 \paragraph{Compile with -g} Enable debug information.
 
-With this option enabled GCC builds debug information into the resulting binary. This is needed my metacreator to resolve source file name, line numbers and other valuable debugging information.
+With this option enabled, GCC builds debug information into the resulting binary. This is needed by metacreator to resolve source file name, line numbers and other valuable debugging information.
 
 \paragraph{Compile with -finstrument-functions} Enable instrumentation.
 
@@ -16,31 +16,31 @@ This GCC parameter is the key. With this option enabled, GCC inserts calls to in
 
 This disables the inlining of functions which is done by the compiler automatically to optimize execution speed by eliminating function call overhead. Since we are profiling on a function execution level, we cannot profile inlined function, so all the functions inlined by the compiler cannot appear in the call graph. To be sure this cannot happen, use -fno-inline as a GCC option. You might skip this if you want. You still might get good profiling results for the calls you are interested in, but you have been warned! Take care!
 
-\paragraph{Link unixcallmonlib as the last library} Ensure the right profiling functions are used.
+\paragraph{Link unixcallmon library as the last library} Ensure the right profiling functions are used.
 
-It might happen, that other libraries as well provide the profiling functions that unix callmon lib provides. If this happens, it is important to ensure that the versions of the unix callmon lib are the ones linked in. This is done by adding the -lunixcallmon\_lib parameter as the last one.
+It might happen, that other libraries as well provide the profiling functions that unix callmon lib provides (glib is an example for that). If this happens, it is important to ensure that the versions of the unix callmon lib are the ones linked in. This is done by adding the -lunixcallmon\_lib parameter as the last one.
 
 \paragraph{On Linux, link with -Wl,-Bsymbolic} Make function calls patchable.
 
-Without this option, symbolic function call information are removed from the resulting binary on Linux. This prevents patch and patch\_clean from finding the call locations and makes it impossible to remove those calls from the binary. 
+Without this option, symbolic function call information is removed from the resulting binary on Linux. This prevents patch and patch\_clean from finding the call locations and makes it impossible to remove those calls from the binary. 
 
-\subsubsection{Resulting build configuration} Íf the project you want to analyze is build using make, you might add the following to the projects Makefile:
+\subsubsection{Putting it all together} Íf the project you want to analyze is build using make, you might want to add the following to the projects Makefile:
 \begin{verbatim}
   CFLAG   += -g -finstrument-functions -fno-inline 
   LDFLAGS += -Wl,-Bsymbolic -L/path/to/callmonlib -lunixcallmon_lib
 \end{verbatim}
 
-\subsection{Building the application} With all the above mentioned this set up, you build your project by just typing \emph{make}.
+\subsection{Building the application} With all the above mentioned set up, you build your project as usual, eg. by typing \emph{make}.
 
-\subsection{Patching the executable} As soon if the build process is finished, you end up with an executable or library which has all the profiling mechanism build in. At this point, every single function which was just compiled by GCC is now enriched by profiling logic. Since this may be a lot, you might want to exclude several functions or groups of functions from the profiling process. This is done by patching the binary. Technically, the calls to the instrumentation functions get overwritten by NOP operations, so almost no overhead is involved in calling functions removed from the profiling process.
+\subsection{Patching the executable} As soon as the build process has finished, you end up with an executable or library which has all the profiling mechanisms build in. At this point, every single function which was just compiled by GCC is now enriched by profiling logic. Since this may be a lot, you might want to exclude several functions or groups of functions from the profiling process. This is done by patching the binary. Technically, the calls to the instrumentation functions get overwritten by NOP operations, so almost no overhead is involved in calling functions removed from the profiling process.
 
 \subsubsection{Patch clean} The first thing to do is call patch\_clean on the binary like this:
 \begin{verbatim}
   $ patch_clean myBinary myBinary.patch
 \end{verbatim}
-The first parameter specifies the binary to patch. The second parameter specifies a patch file name. In this patch file, patch\_clean will write out all the locations from which profiling calls were removed along with the opcodes removed that realized the call. This information in needed my patch to re-include the call opcodes for certain functions in the next step.
+The first parameter specifies the binary to patch. The second parameter specifies a patch file name. In this patch file, patch\_clean will write out all the locations from which profiling calls were removed along with the opcodes removed that realized the call. This information in needed by patch to re-include the call opcodes for certain functions in the next step.
 
-\subsubsection{Patch} At this point, profiling logic is re-added to the functions of interest. This is done by specifying two groups of function name patterns in a pattern file. This is exactly the as with Windows callmon.
+\subsubsection{Patch} At this point, profiling logic is re-added to the functions of interest. This is done by specifying two groups of function name patterns in a pattern file. This is exactly the same like for Windows callmon.
 
 Provide a list of patterns in the include section, as well a list of patterns in the exclude section. Then, call patch like this:
 \begin{verbatim}
@@ -51,28 +51,28 @@ You may leave the patterns file parameter empty to re-include all functions in t
   $ patch myBinary myBinary.patch
 \end{verbatim}
 
-\subsection{Using CGA Toolbar} The CGA Toolbar can be used as usual. It needs to environment variable CALLMON\_HOME setup. This variable has to contain the path, where the log files are created. So lets say, you have a directory structure like this:
+\subsection{Using CGA Toolbar} The CGA Toolbar can be used as usual. It needs to environment variable CALLMON\_HOME set sup. This variable has to contain the path, where the log files are created. So lets say, you have a directory structure like this:
 
 \begin{verbatim}
-  <working dir>
+  <working directory>/
   |
   |- myBinary
   |- myBinary.patch
   |- myPatternsFile.txt
 \end{verbatim}
 
-Create a directory where the CGA Toolbar can operate on like this:
+Create a directory where the CGA Toolbar can operate on, like this:
 \begin{verbatim}
   $ mkdir -p logs/myBinary
 \end{verbatim}
 
 You end up with a directory structure like this:
 \begin{verbatim}
-  <working directory>
+  <working directory>/
   |
-  |- logs
+  |- logs/
   |  |
-  |  |- myBinary
+  |  |- myBinary/
   |     |
   |     |
   |
@@ -86,13 +86,13 @@ Now, fire up the CGA Toolbar like this:
   $ CALLMON_HOME="<working directory>" cgatoolbar
 \end{verbatim}
 
-myBinary should now show up in the drop down menu in the CGA Toolbar. If you now hit the start button, CGA Toolbar will create a file called callmon.cmd:
+The string \emph{myBinary} should now show up in the drop down menu in the CGA Toolbar. If you now hit the start button, CGA Toolbar will create a file called callmon.cmd:
 \begin{verbatim}
-  <working directory>
+  <working directory>/
   |
-  |- logs
+  |- logs/
   |  |
-  |  |- myBinary
+  |  |- myBinary/
   |     |
   |     |- callmon.cmd
   |
@@ -101,10 +101,66 @@ myBinary should now show up in the drop down menu in the CGA Toolbar. If you now
   |- myPatternsFile.txt
 \end{verbatim}
 
-This tells callmon to log function calls. Hitting the stop button, will remove this file. You are now ready to run you application an record profiling information.
+This tells callmon to log function calls. Hitting the stop button will remove this file. You are now ready to run you application and record profiling information.
 
-\subsection{Running the application}
+\subsection{Running the application} Run the application as usual for example like this:
+\begin{verbatim}
+  $ ./myBinary -someParameter=someValue
+\end{verbatim}
 
-\subsection{Using Metacreator}
+If you now press start and stop on the CGA Toolbar, new traces will be generated. Each trace will reside in the logs/myBinary/ directory. Each trace will be put into its own directory depending on the date and time the logging started at. So after you created several traces, you might end up with a directory structure like this:   
 
-\subsection{Loading the trace(s) into CGA} 
+\begin{verbatim}
+  <working directory>/
+  |
+  |- logs/
+  |  |
+  |  |- myBinary/
+  |     |
+  |     |- callmon.cmd
+  |     |- 090229_143523
+  |     |- 090229_143542
+  |     |- 090229_143559
+  |     |- 090229_143614
+  |
+  |- myBinary
+  |- myBinary.patch
+  |- myPatternsFile.txt
+\end{verbatim}
+
+Each trace directory now contains .cmlog files, each of them representing the events that occured in one thread and .modinfo files, that contain the dynamic library state when logging started and as well when logging ended. So the directory for one trace may look like this: 
+
+\begin{verbatim}
+  090229_143542/
+  |
+  |-profile_4243_b8bfa41d.cmlog
+  |-profile_4243_b8bfd411.cmlog
+  |-profile_4243_b1ad00d2.cmlog
+  |-profile_4243_pre.modinfo
+  |-profile_4243_post.modinfo
+\end{verbatim}
+
+The first number in the .cmlog filename describes the process identifier, the second number in hexadecimal describes the thread identifier. The .modinfo filenames as well contain the process identifier.
+
+\subsection{Using Metacreator} The next step is to enrich the collected information by running metacreator. Therefor you simple fire up metacreator and provide it with a traces directory as parameter, like this:
+
+\begin{verbatim}
+  $ metacreator ./logs/myBinary/090229_143542
+\end{verbatim}
+
+Depending on the amount of events you collected, metacreator will take some time now. For all the logged calls, metacreator will now resolve debugging information from the binary. Once finished, a new .callmon file was created in the traces directory. So it should look like this now:
+
+\begin{verbatim}
+  090229_143542/
+  |
+  |-profile_4243_b8bfa41d.cmlog
+  |-profile_4243_b8bfd411.cmlog
+  |-profile_4243_b1ad00d2.cmlog
+  |-profile_4243_pre.modinfo
+  |-profile_4243_post.modinfo
+  |-profile_4243.callmon
+\end{verbatim}
+
+All the preparations are done now. You can now start up CGA and load the trace.
+
+\subsection{Loading the trace(s) into CGA} Start the CGA executable, create a new project. Then, select manage traces, click the add button, select your .callmon file and let CGA import the trace.
