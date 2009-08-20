@@ -24,6 +24,10 @@ It might happen, that other libraries as well provide the profiling functions th
 
 Without this option, symbolic function call information is removed from the resulting binary on Linux. This prevents patch and patch\_clean from finding the call locations and makes it impossible to remove those calls from the binary. 
 
+\paragraph{Build with absolute path to source} Ensure CGA can find source files.
+
+To ensure that CGA can find the source files for the source code viewer, you need to provide GCC with the absolute path to the source file while compiling.
+
 \subsubsection{Putting it all together} Íf the project you want to analyze is build using make, you might want to add the following to the projects Makefile:
 \begin{verbatim}
   CFLAG   += -g -finstrument-functions -fno-inline 
