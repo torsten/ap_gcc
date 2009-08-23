@@ -43,6 +43,12 @@
 \usepackage[pdftex]{graphicx} \else 
 \usepackage{graphicx} \fi
 
+% command to highlight todos
+\usepackage{color}
+\definecolor{Orange}{rgb}{1,0.5,0}
+\newcommand{\todo}[1]{\textsf{\textbf{\textcolor{Orange}{[[#1]]}}}}
+
+
 \title{AP GCC - CGA tool chain on unix systems} 
 \author{ Torsten Becker, Frederik Rudeck, Robert Timm }
 
