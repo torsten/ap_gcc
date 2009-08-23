@@ -16,6 +16,8 @@
 \item http://github.com/torsten/ap\_gcc/blob/b4847070f55198fcee57102c959adc0c4c794b5c/vrs-trunk-r6691-mac-qt4-debug-only.patch
 \end{itemize}
 
+Please note, that all the three patches are made for VRS trunk revision 6691.
+
 \subsection{GCC Version} We need a GCC version, which is greater than or equal to version 4.2 because we are using some functionality which appeared in GCC version 4.2 for the first time.
 
 For example with the function \emph{\_\_sync\_bool\_compare\_and\_swap} GCC provides us with a cross platform way to test and set a variable in an atomic way. This is used several times in the lock free callmon implementation and therefor is essential.
