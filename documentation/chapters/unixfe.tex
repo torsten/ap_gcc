@@ -1,41 +1,48 @@
 \section{Unix fact extraction mechanism in detail}
 
-In this section we want to explain the unix fact extraction mechanism in more detail. Especially we want to explain how we implemented callmon, the executable patching mechanism and metacreator.
+In this section we want to explain the unix fact extraction mechanism in more detail. Especially we want to explain how we implemented the callmon library, the executable patching mechanism and metacreator.
 
 \subsection{Overview}
 
-First of all we want to give a quick overview about the whole workflow of the fact extraction tool chain. For more detailed information about the process have a look at section \ref{sec:Tutorial}.
+First of all we want to give a quick overview about the whole workflow of the fact extraction tool chain. These are the steps if you want to instrument your application and visualize the trace in CGA.
 
 \begin{enumerate}
 	\item Building the application with special compiler flags and linking the callmon.{dll,dylib,so}.
 	\item Patching the executable results in an executable with just NOPs and a patch file (patch clean).
 	\item Patching the executable with the help of an include/exclude file so that we just have specific logging enabled (patch).
 	\item Executing the application.
-	\item Start logging with the cga toolbar.
-	\item Stop logging with the cga toolbar results in cmlog, pre/post modinfo files
+	\item Start logging with the cga toolbar creates a pre modinfo file.
+	\item During the logging callmon writes cmlog files for every thread.
+	\item Stop logging with the cga toolbar creates a post modinfo file.
 	\item The metacreator takes the cmlog and modinfo files and creates a .callmon file
 	\item Import and visualize the trace with CGA.
 \end{enumerate}
 
-\todo{intro for the class diagram}
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=18cm]{images/callmon_class_diagram.png}
-\caption{Class diagram of the tracing mechanism}
-\end{figure}
-
-\todo{überleitung zu den nächsten sections}
+For more detailed information about the process have a look at section \ref{sec:Tutorial}.
 
 \subsection{Callmon}
 
+The central element of the tracing mechanism is callmon. Callmon is a static library, which you have to link against your application you want to instrument. But the most important part is the gcc parameter -finstrument-functions. We will explain this later in more detail. To get an overview about the classes which are involved in the tracing mechanism have a look at figure \ref{fig:figure1}.\\
+
 \begin{figure}[ht]
 \centering
-\includegraphics[width=18cm]{images/callmon_sequence_diagram.png}
+\includegraphics[width=18cm]{images/callmon_class_diagram}
+\caption{Class diagram of the tracing mechanism}\label{fig:figure1}
+\end{figure}
+
+The \emph{StartExitHandler} helps to set crash handlers for the most common signals (SIGINT, SIGILL, SIGSEGV, SIGFPE, SIGTERM, SIGABRT, SIGBUS, SIGHUP)\footnote{\url{http://en.wikipedia.org/wiki/Signal_(computing)}} and an exit handler right after startup (before main). We ensure that the constructor of the \emph{StartExitHandler} is executed before the main routine of the application with the help of a static variable. Static variables are initialized before the first call of the application main routine. The \emph{exithandler()} function deletes the \emph{Coordinator} instance. If the application crashes the crash handler gets executed which processes just a normal cleanup.\\
+
+As mentioned early one of the key elements is the gcc parameter -finstrument-functions. \todo{cyg func enter}
+
+The callmon class ... \todo{explain}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=18cm]{images/callmon_sequence_diagram}
 \caption{Sequence diagram of the function enter procedure}
 \end{figure}
 
-Start exit handler: atexit (dtor) + crash (signals)
+
 
 \begin{verbatim}
 __cyg_profile_func_enter, enter procedure, __cyg_profile_func_exit, 
@@ -53,8 +60,6 @@ function address, return address, object address, time, flag (entry or exit)
 \subsubsection{Coordinator}
 
 singleton
-
-\todo{sequence diagram}
 
 Coordinator - create initial directories (get proc names, linux and mac), modinfohandler, isLoggingActive, output directory
 

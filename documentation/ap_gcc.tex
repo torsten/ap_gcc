@@ -29,6 +29,9 @@
 % If you want to generate a toc for each chapter (use with book)
 \usepackage{minitoc}
 
+% url package
+\usepackage{url}
+
 % This is now the recommended way for checking for PDFLaTeX:
 \usepackage{ifpdf}
 
@@ -48,6 +51,9 @@
 \definecolor{Orange}{rgb}{1,0.5,0}
 \newcommand{\todo}[1]{\textsf{\textbf{\textcolor{Orange}{[[#1]]}}}}
 
+% sets the indent of the paragraph
+\setlength{\parindent}{0pt}
+
 
 \title{AP GCC - CGA tool chain on unix systems} 
 \author{ Torsten Becker, Frederik Rudeck, Robert Timm }
@@ -56,7 +62,10 @@
 
 \begin{document}
 
-\ifpdf \DeclareGraphicsExtensions{.pdf, .jpg, .tif} \else \DeclareGraphicsExtensions{.eps, .jpg} \fi
+% sets the langauge for the listings package	
+\lstset{language=C++}
+
+\ifpdf \DeclareGraphicsExtensions{.pdf, .jpg, .tif, .png} \else \DeclareGraphicsExtensions{.eps, .jpg} \fi
 
 \maketitle
 \begin{abstract}
