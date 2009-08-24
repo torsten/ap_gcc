@@ -2,7 +2,7 @@
 
 \subsection{Summary}
 \begin{itemize}
-    \item a patched version of VRS (see below for details)
+  \item A patched version of VRS (see below for details)
 	\item GCC tested on 4.2, 4.3 (need minimum version 4.2)
 	\item GDB tested on 6.3, 6.8
 	\item BINUTILS tested on 2.19.1, XCode 3.1.3
@@ -18,18 +18,18 @@
 
 Please note, that all the three patches are made for VRS trunk revision 6691.
 
-\subsection{GCC Version} We need a GCC version, which is greater than or equal to version 4.2 because we are using some functionality which appeared in GCC version 4.2 for the first time.
+\subsection{GCC Version} We need a GCC version, which is greater than or equal to version 4.2 because we are using some functionality which appeared in GCC version 4.2 for the first time.\\
 
-For example with the function \emph{\_\_sync\_bool\_compare\_and\_swap} GCC provides us with a cross platform way to test and set a variable in an atomic way. This is used several times in the lock free callmon implementation and therefor is essential.
+For example with the function \emph{\_\_sync\_bool\_compare\_and\_swap} GCC provides us with a cross platform way to test and set a variable in an atomic way. This is used several times in the lock free callmon implementation and is therefor essential.\\
 
 We as well tested our code on GCC 4.3 without any problems.
 
-\subsection{GDB Version} Our implementation of the metacreator was tested on GDB version 6.3 (on Apple Mac OS X) and 6.8 (on Ubuntu Debian Linux).
+\subsection{GDB Version} Our implementation of the metacreator was tested on GDB version 6.3 (on Apple Mac OS X) and 6.8 (on Ubuntu Debian Linux).\\
 
-We do not depend on any functionality which was introduced in version 6.3, so our implementation may also run on older and/or newer versions of GDB. But since we are using GDB in a terminal way (writing commands to it and reading its output), we highly depend on the formatting of GDBs output. Even between version 6.3 and 6.8 there were several small differences like additional line breaks in GDBs output.
+We do not depend on any functionality which was introduced in version 6.3, so our implementation may also run on older and/or newer versions of GDB. But since we are using GDB in a terminal way (writing commands to it and reading its output), we highly depend on the formatting of GDBs output. Even between version 6.3 and 6.8 there were several small differences like additional line breaks in GDBs output.\\
 
 But extending our implementation to handle more versions of GDB is as easy as fixing the regular expressions parsing the GDB output.
 
-\subsection{Binutils} On Linux we are using \emph{objdump} and \emph{nm} from the binutils distribution. All our code was tested with version 2.19.1 of these tools. On Mac OS X we a using \emph{otool} and \emph{nm} as provided by Apple bundled with XCode version 3.1.3.
+\subsection{Binutils} On Linux we are using \emph{objdump} and \emph{nm} from the binutils distribution. All our code was tested with version 2.19.1 of these tools. On Mac OS X we a using \emph{otool} and \emph{nm} as provided by Apple bundled with XCode version 3.1.3.\\
 
 Like in the GDB case we are parsing the output using regular expressions, so changes in the output format of these tools are likely to break our parsing, but again, only some regular expression need to be adjusted.

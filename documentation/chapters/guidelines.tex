@@ -4,9 +4,9 @@
 \begin{verbatim}
 "this/is/a/valid/path" 
 \end{verbatim}
-This applies to paths needed by the programs logic, for like opening files, and as well for paths used in the build process, for example includes.
+This applies to paths needed by the programs logic, for opening files, and as well for paths used in the build process, for example includes.
 
-\subsection{Const correctness} There were several parts of the code which made use of the keyword \emph{const} in an invalid way. We still do not know, how this was able to compile on the Visual C++ compiler. 
+\subsection{Const correctness} There were several parts of the code which made use of the keyword \emph{const} in an invalid way. We still do not know, how this was able to compile on the Visual C++ compiler.\\
 
 When declaring something \emph{const}, it \textbf{must not} be changed or given to a function that expects a non const, because this function could potentially change it. An example:
 \begin{verbatim}
@@ -59,7 +59,6 @@ int main() {
 \end{verbatim}
 So always check who \emph{owns} the original object the reference if pointing to and when does the original object get destructed.
 
-
 \subsection{Templates with templated template arguments} The GCC's parser for template type name behaves slightly different than the Visual C++ ones. For example this is a valid definition in Visual C++: 
 \begin{verbatim}
 std::list<std::pair<int, int>> myListOfIntPairs; 
@@ -70,7 +69,7 @@ This is \textbf{not} valid while compiling with GCC. You have to separate both \
 std::list<std::pair<int, int> > myListOfIntPairs; 
 \end{verbatim}
 
-\subsection{Templates using types that depend on the template parameter} When using datatypes in template classes, that depend on the template parameter, GCC needs the additional keyword \emph{typename}. An example:
+\subsection{Templates using types that depend on the template parameter} When using data types in template classes, that depend on the template parameter, GCC needs the additional keyword \emph{typename}. An example:
 
 \begin{verbatim}
 #include <list>
@@ -192,8 +191,8 @@ Using this construct the resulting code is again cross compiler compatible and s
 #  error "unsupported gcc version, need gcc 4.2 or higher"
 #endif
 \end{verbatim}
-Yes, this is just the GCC part, to include Visual C++ too, it needs still a bit more code, which is as well included in our branch of CGA. So to keep the cross compiler compatibility the marcos defined above should be used. 
+Yes, this is just the GCC part, to include Visual C++ too, it needs still a bit more code, which is as well included in our branch of CGA. So to keep the cross compiler compatibility the macros defined above should be used. 
 
-\subsection{Qt is the key} Qt provides a great way to write platform independent code. QtCore contains lots of things like QThread and QMutex which replace pthreads\_create() or WaitForSingleObject() which else would break cross platform compatibility. 
+\subsection{Qt is the key} Qt provides a great way to write platform independent code. QtCore contains lots of things like QThread and QMutex which replace pthreads\_create() or WaitForSingleObject() which else would break cross platform compatibility.\\
 
 So in general, Qt should be used as much as possible to ensure platform independence. Only the unix callmon implentation does not use Qt to keep it light wight. The mechanisms used are highly unix specific anyway. 
