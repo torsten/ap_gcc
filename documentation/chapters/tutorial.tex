@@ -33,9 +33,9 @@ It might happen, that other libraries as well provide the profiling functions th
 
 \paragraph{On Linux, link with -Wl,-Bsymbolic} Make function calls patchable.
 
-\todo{explain this case more in detail, just happens with .so s, etc.}
+This option is important when linking shared objects on Linux, on Mac OS X this is not necessarily required.
 
-Without this option, symbolic function call information is removed from the resulting binary on Linux. This prevents \toolname{cga\_patch} and \toolname{cga\_patchclean} from finding the call locations and makes it impossible to remove those calls from the binary. 
+Without this option, symbolic function call information is removed from the resulting shared object on Linux and this makes it impossible to find the call sites of the instrumentation functions.  This prevents \toolname{cga\_patch} and \toolname{cga\_patchclean} from finding the call locations and makes it impossible to remove those calls from the binary.
 
 \paragraph{Build with absolute path to source} Ensure CGA can find source files.
 
