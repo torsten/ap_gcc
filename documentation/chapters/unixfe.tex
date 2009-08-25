@@ -9,7 +9,7 @@ In this section we want to explain the unix fact extraction mechanism in more de
 First of all we want to give a quick overview about the whole workflow of the fact extraction tool chain. These are the steps if you want to instrument your application and visualize the trace in CGA:
 
 \begin{enumerate}
-	\item Building the application with special compiler flags and linking the callmon.{dll,dylib,so}.
+	\item Building the application with special compiler flags and linking the unixcallmon\_lib.\{a,lib\}.
 	\item Patching the executable results in an executable with just NOPs and a patch file (patch clean).
 	\item Patching the executable with the help of an include/exclude file so that we just have specific logging enabled (patch).
 	\item Executing the application.
@@ -121,16 +121,19 @@ The Linux way uses \verb=inotify= which is a Linux kernel subsystem that provide
 
 \subsubsection{Event writer} 
 
-event writer (own thread), PerThreadData, setOutputdirectory, Mutex
+The \inlinecode{EventWriter} has its own worker thread, which is responsible to write the events into thread specific log files (\pathname{profile\_<pid>\_<threadId>.cmlog}). But the most important part of the \inlinecode{EventWriter} is to provide an interface for each thread to add events to a lockfree queue. The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization.
 
-The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization. \todo{TODO: explain in more detail}
+Internally every profiled thread has its own \inlinecode{PerThreadData} object, where we store data the event writer needs. We use a standard map to save which thread already has its own \inlinecode{PerThreadData} object. The only two situations where we have to lock this map, is when we create a new \inlinecode{PerThreadData} object and when set a new output directory. This situations just occur at the beginning of a new logging cycle.
+
+When somebody calls \inlinecode{addEvent()} we create a \inlinecode{PerThreadData} object on demand and try to push the event into the queue. If the queue is full we wait a moment so that the worker (writing) thread can free the queue.
+
+With the help of the cga toolbar the user can start and stop logging. Every trace is stored in a separate folder, so we have to set the output directory of the \inlinecode{EventWriter} every time we start a new logging cycle. During this set up we have to wait until all queued events of the threads are written to the log files.
 
 \subsubsection{Asynchronous I/O}
 
 We use asynchronous I/O to write the logged function entries and exits to a thread specific log file. The \verb=EventWriter= runs in its own thread and stores the received events, as described in the previous section, in a lock-free queue. If the \verb=EventWriter= thread is scheduled we check if there are any events in the queue and write them to the log file. A very simple approach to write the events to the log file would be synchronous I/O, which blocks the progress of a program until the operations are completed. The alternative is to start the communication and then perform processing that does not require that the I/O has completed. This is called asynchronous I/O and is much more efficient then synchronous I/O.
 
 To perform asynchronous I/O we use the POSIX standard for asynchronous input and output. \verb=aio_write()= gets as parameter a \verb=aiocb= structure which stores a file descriptor, file offset, the location of the buffer we want to write and the length of transfer. For more specific information have a look at the \verb=aio(4)= man page.
-
 
 \subsection{Patch and Patchclean}
 
@@ -144,7 +147,7 @@ Unfortunately the original patch and patchclean tools had some implementation sp
 
 Also the requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and enforces its call on all ways out of a function.  So we could handle enters and exits properly.
 
-Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.
+Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/\\unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.
 
 The logic for patching and cleaning happens in the 2 files \pathname{main\_patch.cpp} and \pathname{main\_patchclean.cpp}.  Both files are very similar and use the loosely coupled to above classes.  In the following paragraphs each of the involved classes gets a more detailed description to illustrate the implementation of the patching process on UNIX platforms.
 
@@ -172,11 +175,25 @@ The next step after initialization is a call to \inlinecode{filterFunctions()} w
 
 Internally the \inlinecode{IncludeExcludeFilter} uses \toolname{c++filt} from the GNU Binutils to de-mangle GCCs C++ symbols so the regular expressions from the file can be applied.
 
-\paragraph{ExeFilePatcher} This is the class which 
-
 \paragraph{BaseAddressRetriever}
 
+The to retriever classes gather information about executable files including shared objects on Linux and dylibs on Mac OS X.  The \inlinecode{BaseAddressRetriever} in particular is responsible for getting the base address and the offset in the actual file of an executable file's text segement and provides the static method \inlinecode{getCallsites()} for this task.
+
+This is information is required for the \inlinecode{ExeFilePatcher} to modify the files at the right offsets.  Since this task is highly platform specific because Linux uses the ELF binary format and Mac OS X uses Mach-O there is no generic way to achieve this, there are also no generic POSIX APIs which could help here.
+
+Because of this we decided to use tools which are available on each platform to implement this information gathering.  On Linux \toolname{objdump -h} provides us with this information and on Mac OS X we can run \toolname{otool -l}.
+
+Their respective outputs tell a lot of meta information about an executable file and it gets parsed using regular expressions which are trimmed for the specific outputs.
+
 \paragraph{CallsiteRetriever}
+
+Having basic information about an executable file, however, is not enough.  It is also important to find the actual call sites to the instrumentation functions in the executable to be able to patch exactly this positions.  This is the functionality the \inlinecode{CallsiteRetriever} provides via the static method \inlinecode{getCallsites()} which returns a \inlinecode{QList<Function>}.
+
+Again, gathering this information requires analysing the executable files on both platforms.  It is necessary to disass...
+
+\paragraph{ExeFilePatcher}
+
+The \inlinecode{ExeFilePatcher} is the 
 
 
 
