@@ -189,7 +189,9 @@ Their respective outputs tell a lot of meta information about an executable file
 
 Having basic information about an executable file, however, is not enough.  It is also important to find the actual call sites to the instrumentation functions in the executable to be able to patch exactly this positions.  This is the functionality the \inlinecode{CallsiteRetriever} provides via the static method \inlinecode{getCallsites()} which returns a \inlinecode{QList<Function>}.
 
-Again, gathering this information requires analysing the executable files on both platforms.  It is necessary to disass...
+Again, gathering this information requires analysing the executable files on both platforms.  It is necessary to disassemble the executables to find the calls to the instrumentation functions.
+
+On Linux we use \toolname{objdump -d} and on Mac OS X \toolname{otool -tvV} to disassemble the text segments of the binaries.  Both tools generate different but quite similar outputs.  So we did not have to implement 2 separate parsing mechanisms but rather use one parser functions which can handle both output formats.
 
 \paragraph{ExeFilePatcher}
 
@@ -198,12 +200,12 @@ The \inlinecode{ExeFilePatcher} is the
 
 
 
-\subsubsection{ELF patching} 
-
-file specifics, offsets, objdump, see requirements
-
-
-\subsubsection{Mach-O patching}
+% \subsubsection{ELF patching} 
+% 
+% file specifics, offsets, objdump, see requirements
+% 
+% 
+% \subsubsection{Mach-O patching}
 
 
 
