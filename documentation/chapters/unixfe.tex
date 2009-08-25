@@ -156,4 +156,6 @@ file specifics, offsets, objdump, see requirements
 
 \subsection{Metacreator} The metacreator running in the unix tool chain of CGA might be the tool which shares the most code with the Windows version. This is possible, since the Dia mechanism used on Windows is called using an interface named \inlinecode{DiaApi}. We provide an alternative implementation of \inlinecode{DiaApi} which is called \inlinecode{GDBWrapper}. This class receives the requests of metacreator and uses \inlinecode{GDBInterface} to resolve the information requested.
 
+\subsubsection{GDBInterface} The \inlinecode{GDBInterface} class wraps around GDB to retrieve debug information. This is done by starting GDB and communicating with it in terminal style. We send command lines and parse the output provided by GDB using regular expressions. 
+
 \subsubsection{Line number caching} The process to resolve start and end line number of a function using GDB is quite complicated and involves several commands and hence a lot of result parsing. To minimize the processing time, we added a line number cache. This is a map which stores start and end line number for functions. If there are several returns in the body of the same function, line numbers only need to get resolved once.
