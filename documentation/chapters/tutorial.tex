@@ -9,7 +9,7 @@ In this tutorial, we use ioQuake3 profiling on Mac OS X as a sample, but for oth
 
 \subsection{Preparing the build process} How to prepare the build process.
 
-\subsubsection{Parameters to GCC} This is a list of parameters needed by GCC when profiling with unix fact extraction.
+\subsubsection{Parameters to GCC} This is a list of parameters needed by GCC when profiling with UNIX fact extraction.
 
 \paragraph{Compile with -g} Enable debug information.
 
@@ -19,7 +19,7 @@ Note that you can still compile with optimizations enabled (\inlinecode{-O2} and
 
 \paragraph{Compile with -finstrument-functions} Enable instrumentation.
 
-This GCC parameter is the key. With this option enabled, GCC inserts calls to instrumentation functions right after a function was called and right before a function returns. If you do not provide this option in the compilation process, no calls will be made to the unix callmon library, and therefor no profiling information can be retrieved.
+This GCC parameter is the key. With this option enabled, GCC inserts calls to instrumentation functions right after a function was called and right before a function returns. If you do not provide this option in the compilation process, no calls will be made to the UNIX callmon library, and therefor no profiling information can be retrieved.
 
 \paragraph{Compile with -fno-inline} Disable inlining of functions.
 
@@ -27,9 +27,9 @@ This disables the inlining of functions which is done explicitly by the develope
 
 Since we are profiling on a function execution level, we cannot profile inlined function, so all the functions inlined by the compiler cannot appear in the call graph. To be sure this cannot happen, use \inlinecode{-fno-inline} as a GCC option. You might skip this if you want. You still might get good profiling results for the calls you are interested in, but you have been warned!
 
-\paragraph{Link unixcallmon library as the last library} Ensure the right profiling functions are used.
+\paragraph{Link UNIXcallmon library as the last library} Ensure the right profiling functions are used.
 
-It might happen, that other libraries as well provide the profiling functions that unix callmon lib provides (glib is an example for that). If this happens, it is important to ensure that the versions of the unix callmon lib are the ones linked in. This is done by adding the \inlinecode{-lunixcallmon\_lib} parameter as the last one.
+It might happen, that other libraries as well provide the profiling functions that UNIX callmon lib provides (glib is an example for that). If this happens, it is important to ensure that the versions of the UNIX callmon lib are the ones linked in. This is done by adding the \inlinecode{-lUNIXcallmon\_lib} parameter as the last one.
 
 \paragraph{On Linux, link with -Wl,-Bsymbolic} Make function calls patchable.
 
@@ -46,7 +46,7 @@ To ensure that CGA can find the source files for the source code viewer, you nee
 \begin{verbatim}
   CFLAG   += -g -finstrument-functions -fno-inline 
   CXXFLAG += -g -finstrument-functions -fno-inline 
-  LDFLAGS += -Wl,-Bsymbolic -L/path/to/callmonlib -lunixcallmon_lib
+  LDFLAGS += -Wl,-Bsymbolic -L/path/to/callmonlib -lUNIXcallmon_lib
 \end{verbatim}
 
 For ioQuake3, we added the following in \pathname{IOQUAKE3\_ROOT/Makefile} in the \inlinecode{ifeq (\$(PLATFORM),darwin)} section (around line 360):
@@ -55,7 +55,7 @@ For ioQuake3, we added the following in \pathname{IOQUAKE3\_ROOT/Makefile} in th
   BASE_CFLAGS  = -Wall -Wimplicit -Wstrict-prototypes
   BASE_CFLAGS += -fno-inline
   BASE_CFLAGS += -finstrument-functions 
-  LDFLAGS     += -L/path/to/callmonlib -lunixcallmon_lib -lstdc++
+  LDFLAGS     += -L/path/to/callmonlib -lUNIXcallmon_lib -lstdc++
 \end{verbatim}
 
 \subsection{Building the application} With all the above mentioned set up, you build your project as usual, e.g. by typing \toolname{make}.
@@ -218,11 +218,11 @@ All the preparations are done now. You can now start up CGA and load the trace.
 \caption{Trace Visualisation for ioQuake3}\label{fig:ioquake3_trace}
 \end{figure}
 
-\subsection{Multithreaded example} To show the multithreading capabilities of our system, we provide a small sample called \toolname{unixcallmontest}. This executable will be created by the CMake build process. All the special GCC flags are already set up for you. You only need to patch and profile the program as described above.
+\subsection{Multithreaded example} To show the multithreading capabilities of our system, we provide a small sample called \toolname{UNIXcallmontest}. This executable will be created by the CMake build process. All the special GCC flags are already set up for you. You only need to patch and profile the program as described above.
 
 Here is how it might look like:
 \begin{figure}[ht]
 \centering
 \includegraphics[width=16cm]{images/cga_threads}
-\caption{Concurrency Visualisation showing data collected on Unix}\label{fig:cga_threads}
+\caption{Concurrency Visualisation showing data collected on UNIX}\label{fig:cga_threads}
 \end{figure}
