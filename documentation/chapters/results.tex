@@ -4,7 +4,7 @@
 
 This section provides a short overview on what we achieved during the project.
 
-\subsection{CMake build enviroment} We switched the build environment of CGA from Visual Studio to CMake. This enables the same build configuration to manage the build process on several platforms for several compilers by generating makefiles or project files  for the most common IDEs.\\
+\subsection{CMake build enviroment} We switched the build environment of CGA from Visual Studio to CMake. This enables the same build configuration to manage the build process on several platforms for several compilers by generating makefiles or project files  for the most common IDEs.
 
 We tested this system for Visual C++ on Windows and for Makefiles on Linux and Mac OS X. It is very likely that this will also work without any tweaks for KDevelop, XCode and many many more.
 
@@ -14,7 +14,7 @@ We tested this system for Visual C++ on Windows and for Makefiles on Linux and M
 
 \todo{little disk space?}
 
-\subsection{Metacreator} To port metacreator to Linux and Mac OS X we just implemented the DiaInterface. So we were able to port the whole tool with very little code changes.\\
+\subsection{Metacreator} To port metacreator to Linux and Mac OS X we just implemented the DiaInterface. So we were able to port the whole tool with very little code changes.
 
 We added a class which gets instantiated from the DiaFactory and then interfaces with GDB to obtain debugging information like file names, line numbers of functions and call sites. Caching allows to reduce the communication with GDB to a minimum.
 
