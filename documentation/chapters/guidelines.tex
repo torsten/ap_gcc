@@ -3,9 +3,11 @@
 \section{Guideline - Code that builds on GCC and Visual C++} This section contains a list of the most common problems we found in the code of CGA. As well we provide a solution to these problems, which make the code compile and run on Visual C++ and GCC.
 
 \subsection{Paths} To be valid on Windows and Unix platforms, a path \textbf{must not} contain any backslashes as separators. The only valid path separator for both platforms is the slash symbol \textbf{/}. So a valid path looks like this: 
+
 \begin{verbatim}
 "this/is/a/valid/path" 
 \end{verbatim}
+
 This applies to paths needed by the programs logic, for opening files, and as well for paths used in the build process, for example includes.
 
 \subsection{Const correctness} There were several parts of the code which made use of the keyword \emph{const} in an invalid way. We still do not know, how this was able to compile on the Visual C++ compiler.
@@ -59,6 +61,9 @@ int main() {
   return 0;
 }
 \end{verbatim}
+
+\todo{maybe show an example where this actualy crashes}
+
 So always check who \emph{owns} the original object the reference if pointing to and when does the original object get destructed.
 
 \subsection{Templates with templated template arguments} The GCC's parser for template type name behaves slightly different than the Visual C++ ones. For example this is a valid definition in Visual C++: 
@@ -88,7 +93,7 @@ GCC's error output is not quite clear here (like in so many cases, especially wh
 type ‘std::list<T, std::allocator<_CharT> >’ is not derived from type ‘MyListWrapper<T>’
 \end{verbatim}
 
-\subsection{Template types as parameter with default value} I would consider this a GCC parser bug. The following code does not compile on GCC:
+\subsection{Template types as parameter with default value} One could consider this a GCC parser bug. The following code does not compile on GCC:
 \begin{verbatim}
 class MyClass {
   MyClass(std::map<int, int> p_map = std::map<int, int>()) { }
@@ -111,7 +116,7 @@ class MyClass {
 };
 \end{verbatim}
 
-\subsection{Member function declarations} When declaring a member function inside the class statement, some people tent to prepend the name of the class to the method name. This may increase readability when inheriting several levels:
+\subsection{Member function declarations} When declaring a member function inside the class statement, some people tend to prepend the name of the class to the method name. This may increase readability when inheriting several levels:
 \begin{verbatim}
 class A {
 public:
@@ -133,6 +138,7 @@ public:
 \end{verbatim}
 
 The problem is, this \textbf{is not} a valid syntax for GCC. You \textbf{must not} prepend the class name to the member function. So the above declaration is valid for GCC like this:
+
 \begin{verbatim}
 class A {
 public:
@@ -156,20 +162,29 @@ public:
 \subsection{windows.h} You \textbf{must not} include windows.h because all the types and functions provided by windows.h are highly Windows specific and will not compile nor run on other platforms. In general you will find the same functionality in QtCore. When using QtCore's functionality, it is easy to compile and run the code on all the platforms supported by Qt.
 
 \subsection{for each() vs. foreach() vs. for()} Visual C++ provides a construct which looks like this:
+
 \begin{verbatim}
 for each(int i in myIntList) {
   // loop code here
 }
 \end{verbatim}
-This \textbf{is not} available on GCC. Therefor this cannot compile on both compilers. But the for each way is handy, so a cross compiler alternative is again the usage of Qt. Qt provides a construct like this:
+
+This \textbf{is not} available on GCC. Therefor this cannot compile on both compilers. But some kind of for-each is handy, since it increases readability, so a cross compiler alternative is again the usage of Qt. Qt provides a construct like this:
+
 \begin{verbatim}
 foreach(int i, myIntList) {
   // loop code here
 }
 \end{verbatim}
+
+Like Visual C++'s \texttt{for each}, Qt's \texttt{foreach} doesn't support alteration of objects, so modifying \texttt{i} in the loop body would not alter the integer in the list.  To enforce this at the compilation stage writing the above as \texttt{foreach(const int i, myIntList)} is even more clean and prevents errors.
+
 Using this construct the resulting code is again cross compiler compatible and stays readable and handy. An alternative is always to use the vanilla C++ for(;;) construct. 
 
+If you want to modify the elements of an container while looping over them you can either use containers containing pointers or STL iterators.
+
 \subsection{stdext vs. \_\_gnu\_cxx vs. tr1} Datatypes like the hash\_map are currently not part of the C++ Standard Template Library. But compiler vendors provide extensions in their own namespaces. Visual C++ provides this in the stdext namespace, GCC up to version 4.2 in the \_\_gnu\_cxx namespace. Since version 4.3 of GCC, the hash\_map was moved to the namespace std::tr1 and renamed to unordered\_map. The new C++ standard C++0x is on it's way and will contain the unordered\_map. So it is very likely that a new namespace will contain unordered\_map. For now, we found the following solution to the problem:
+
 \begin{verbatim}
 #if __GNUC__ == 4 && __GNUC_MINOR__ >= 2
 #  if __GNUC_MINOR__ == 2
@@ -193,8 +208,11 @@ Using this construct the resulting code is again cross compiler compatible and s
 #  error "unsupported gcc version, need gcc 4.2 or higher"
 #endif
 \end{verbatim}
+
 Yes, this is just the GCC part, to include Visual C++ too, it needs still a bit more code, which is as well included in our branch of CGA. So to keep the cross compiler compatibility the macros defined above should be used. 
 
-\subsection{Qt is the key} Qt provides a great way to write platform independent code. QtCore contains lots of things like QThread and QMutex which replace pthreads\_create() or WaitForSingleObject() which else would break cross platform compatibility.
+\subsection{Qt is the key}
 
-So in general, Qt should be used as much as possible to ensure platform independence. Only the unix callmon implentation does not use Qt to keep it light wight. The mechanisms used are highly unix specific anyway. 
+Qt provides a great way to write platform independent code. QtCore contains lots of things like QThread and QMutex which replace pthreads\_create() or WaitForSingleObject() which else would break cross platform compatibility.
+
+So in general, Qt should be used as much as possible to ensure platform independence. Only the unix callmon implementation does not use Qt to keep it light weight. The mechanisms used are highly unix specific anyway. 

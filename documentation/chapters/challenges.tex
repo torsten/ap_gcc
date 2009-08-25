@@ -18,20 +18,32 @@ Parts of our implementation rely on GCC and GDB, which are both available on Lin
 
 DllMain is a mechanism which enables a developer of a dynamic library to react on events like getting loaded, getting unloaded, new threads attached and similar. This mechanism is not available on Mac OS X's .dylib system nor on Linux's .so system. \todo{add a footnote or so} So we had to make excessive use of lazy initialization, thread specific storage and similar constructs.
 
-\subsection{Compiler specifics} The main instrumentation mechanism is based on a feature provided by the GCC compiler.  The Microsoft Visual C++ compiler can insert calls to instrumentation functions right after a function was called and right before a function returns. The mechanism in general is the same using GCC, but the differences appear when it comes to details.
+\subsection{Compiler specifics}
 
-On Visual C++, it is possible to compile a function \emph{naked}, which removes functions prolog and epilog and lets the programmer implement them himself. This feature enables the function to have a certain view on the stack, because the implementation itself is responsible for creating the stack frame, adjusting stack pointers and so on. So as a \emph{naked} function starts, it has the same view on the stack as the function which called it. This is great for the implementation of the instrumentation functions. GCC as well does provide this feature, but, it is not supported on x86 platforms. So we had to work around this situation.
+The main instrumentation mechanism is based on a feature provided by the GCC compiler.  The Microsoft Visual C++ compiler can insert calls to instrumentation functions right after a function was called and right before a function returns. The mechanism in general is the same using GCC, but the differences appear when it comes to details.
 
-Some data types, like hash\_map, which are not part of the C++ Standard, have different names and reside in different namespaces on different compilers.
+In the Visual C++ compiler, it is possible to compile a function \inlinecode{naked}, which removes functions prolog and epilog and lets the programmer implement them himself. This feature enables the function to have a certain view on the stack, because the implementation itself is responsible for creating the stack frame, adjusting stack pointers and so on. So as a \inlinecode{naked} function starts, it has the same view on the stack as the function which called it. This is great for the implementation of the instrumentation functions. GCC as well does provide this feature, but, it is not supported on x86 platforms. So we had to work around this situation.
 
-\subsection{IDE specifics} While introducing the CMake based build system in CGA, we found ourselves in front of a complex and highly platform specific Visual Studio solution with lots of inter project dependencies. It contained lots of custom build steps, like Qt preprocessing steps (uic and moc) and post build steps to get, for example, unit testing data in place.
+Some data types, like \inlinecode{hash\_map} and \inlinecode{hash\_set}, which are not part of the C++ standard, have different names and reside in different namespaces on different compilers.  In GCC they also require the definition of custom helper functions to hash certain data types whereas the Visual Studio compiler provides more default implementations for this.
 
-Furthermore the solution was a grown structure, so several obsolete code files still exist in the source tree, but are excluded from the build process. Includes defined using the Visual Studio project settings were missing in the source files which actually needed them. Just to name a few pitfalls.
+\subsection{IDE specifics}
 
-\subsection{Backport to Windows} Porting CGA to Linux and Mac OS X was only the first step. After we applied all the changes to the source tree and integrated CMake as a build system, we had to backport to Windows and build CGA on Windows using the new CMake build system.
+While introducing the CMake based build system in CGA, we found ourselves in front of a complex and highly platform specific Visual Studio solution with lots of inter project dependencies. It contained lots of custom build steps, like Qt preprocessing steps (\toolname{uic} and \toolname{moc}) and post build steps to get, for example, unit testing data in place.
 
-\subsection{Merging} Due to the requirement, that all the changes made during the seminar should be able to easily get applied to the trunk of CGA, we had to constantly merge changes from the seminars main branch to our own one. Those changes again brought incompatibilities with GCC and even our unix fact extraction port which partly relies on code from the Windows fact extraction mechanisms.
+Furthermore the solution was a grown structure, so several obsolete code files still exist in the source tree, but were excluded from either the build process of the whole project.  Includes defined using the Visual Studio project settings were missing in the source files which actually needed them. Just to name a few pitfalls.
+
+\subsection{Backport to Windows}
+
+Porting CGA to Linux and Mac OS X was only the first step. After we applied all the changes to the source tree and integrated CMake as a build system, we had to backport to Windows and build CGA on Windows using the new CMake build system  and integrate the pre-compiled header support into this process.
+
+\subsection{Merging}
+
+Due to the requirement, that all the changes made during the seminar should be able to easily get applied to the trunk of CGA, we had to constantly \todo{oh rly?} merge changes from the seminars main branch to our own one. Those changes again brought incompatibilities with GCC and even our unix fact extraction port which partly relies on code from the Windows fact extraction mechanisms.
 
 When all the other project branches merged their changes into the seminars main branch, we as well pulled that changes into our branch to ensure Linux and Mac OS X compatibility of those projects.
 
-\subsection{Qt did a great job} In general, we have to say, that Qt did a great job. Without the platform independence of not only all the GUI code, it would not have been possible to port CGA in such a short time period. 
+\subsection{Qt did a great job}
+
+\todo{maybe replace Qt with Trolltech since Qt is just the product?}
+
+In general, we have to say, that Qt did a great job. Without the platform independence of not only all the GUI code, it would not have been possible to port CGA in such a short time period. 
