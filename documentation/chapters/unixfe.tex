@@ -131,11 +131,28 @@ We use asynchronous I/O to write the logged function entries and exits to a thre
 
 To perform asynchronous I/O we use the POSIX standard for asynchronous input and output. \verb=aio_write()= gets as parameter a \verb=aiocb= structure which stores a file descriptor, file offset, the location of the buffer we want to write and the length of transfer. For more specific information have a look at the \verb=aio= man page.
 
-\subsection{Patch and Patchclean} 
+\subsection{Patch and Patchclean}
+
+Unfortunately the original patch and patchclean tools had some implementation specific limitations which made a direct port to UNIX hardly feasible.
+
+\todo{Reasons: Windows API, PE code, DIA API, nur enter}
+
+Also the requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and enforces its call on all ways out of a function.
+
+Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \emph{factextraction/unix/unixfactextraction/} directory.
+
+\todo{Explain architecture, similar to windows, patch files (qdatastream), }
+
 
 \subsubsection{ELF patching} 
 
-\subsubsection{MachO patching}
+file specifics, offsets, objdump, see requirements
+
+
+\subsubsection{Mach-O patching}
+
+
+
 
 \subsection{Metacreator} 
 

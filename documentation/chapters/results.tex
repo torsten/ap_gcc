@@ -6,7 +6,7 @@ This section provides a short overview on what we achieved during the project.
 
 \subsection{CMake build enviroment} We switched the build environment of CGA from Visual Studio to CMake. This enables the same build configuration to manage the build process on several platforms for several compilers by generating makefiles or project files  for the most common IDEs.
 
-We tested this system for Visual C++ on Windows and for Makefiles on Linux and Mac OS X. It is very likely that this will also work without any tweaks for KDevelop, XCode and many many more.
+We tested this system for Visual C++ on Windows and for Makefiles on Linux and Mac OS X. It is very likely that this will also work without any tweaks for KDevelop, Xcode and many many more.
 
 \subsection{Callmon runtime library} We implemented a callmon runtime library for applications and libraries build with GCC. This library features a lock free path from call event to log file (even in multithreaded environments using atomic operations), starting and stopping of the logging process using file system event APIs and asynchronous I/O to handle writing of log files as efficient as possible. Finally we benchmarked I/O throughput of up to 70MB per second (MacBook Pro Unibody running ioQuake3).
 
