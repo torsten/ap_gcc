@@ -10,14 +10,14 @@ We tested this system for Visual C++ on Windows and for Makefiles on Linux and M
 
 \subsection{Callmon runtime library} We implemented a callmon runtime library for applications and libraries build with GCC. This library features a lock free path from call event to log file (even in multithreaded environments using atomic operations), starting and stopping of the logging process using file system event APIs and asynchronous I/O to handle writing of log files as efficient as possible. Finally we benchmarked I/O throughput of up to 70MB per second (MacBook Pro Unibody running ioQuake3).
 
-\subsection{Patch and Patchclean} We implemented tools to patch executables and libraries on Linux and Mac OS X. These tools store patch information in a very efficient way to binary patch files, which consume very little disk space.
+\subsection{Patch and Patchclean}
 
-\todo{little disk space?}
+We had to re-implement the tools to patch executables and shared libraries on Linux and Mac OS X.  These tools store patch information in binary patch files, the func-patterns file is totally compatible with the existing format and the steps for patching match the current process as well.
 
 \subsection{Metacreator} To port metacreator to Linux and Mac OS X we just implemented the DiaInterface. So we were able to port the whole tool with very little code changes.
 
 We added a class which gets instantiated from the DiaFactory and then interfaces with GDB to obtain debugging information like file names, line numbers of functions and call sites. Caching allows to reduce the communication with GDB to a minimum.
 
-\subsection{Cross platform fixes for the CGA application and toolbar}
+\subsection{Cross platform fixes}
 
-Finally we fixed several issues in the CGA application to allow the operation on Windows and Unix platforms. Most of the fixes handle cross compiler compatibility. Several minor fixes were made to handle eg. unix paths and other small differences that appear on unix platforms.
+Finally we fixed several issues in the CGA application to allow the operation on Windows and UNIX platforms. Most of the fixes handle cross compiler compatibility. Several fixes were made to handle eg. UNIX paths and other differences that appear on UNIX platforms.  See section 7 on guidelines how to prevent further incompatibilities.
