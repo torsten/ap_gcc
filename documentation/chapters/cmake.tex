@@ -45,17 +45,19 @@ By the way, on Linux there is, like on Windows systems, a GUI that helps configu
 
 
 \subsection{On Windows}
-Since on Windows the automatic dependency finding does not work like on unix systems (because it is not possible to predict where libraries and headers of dependencies are placed) some more steps are needed, but all of them are straight forward. You need the CGA Dependency package on your System.
+Since on Windows the automatic dependency finding does not work like on unix systems (because it is not possible to predict where libraries and headers of dependencies are placed) some more steps are needed, but all of them are straight forward. You need the CGA dependency package on your system.
 
 \begin{itemize}
 	\item Start up the CMake GUI
 	\item Set the source code directory to the CGA root directory
     \item Set the build directory to a newly created directory inside the CGA root directory (you might want to call it \pathname{build})
     \item Hit the configure button (lots of red lines should appear in the GUI)
-    \item Point all the red lines to the correct paths to dependency headers and libraries
+    \item Point all the red marked paths to the correct locations of dependency headers and libraries
     \item Hit the configure button again, all red lines should disappear now
     \item Hit the generate button
-    \item Inside the \pathname{build} folder a new file named \pathname{cga.sln}
+    \item Inside the \pathname{build} folder a new file named \pathname{cga.sln} was created
+    \item Open this file with Visual Studio
+    \item Build the solution
 \end{itemize}
 
 
