@@ -28,7 +28,7 @@ The central element of the tracing mechanism is callmon. Callmon is a static lib
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=18cm]{images/callmon_class_diagram}
+\includegraphics[width=16cm]{images/callmon_class_diagram}
 \caption{Class diagram of the callmon library}\label{fig:unixfe_figure1}
 \end{figure}
 
@@ -48,11 +48,11 @@ We implemented both functions (see callmon.cpp), which collect the following dat
 	\item Entry and exit time
 \end{itemize}
 
-On Linux when a function of a shared library gets called from the main executable, \verb=__cyg_profile_func_enter()= reports the wrong function address. It just tells the address in the jump table, not where the real function code is located. Therefore we have to correct the function address with the help of \verb=dereferenceLinuxJumpTable()=, which searches the jump table and finds the real address.
+On Linux when a function of a shared library gets called from the main executable, \verb=__cyg_profile_func_enter()= reports the wrong function address. It just tells the address in the jump table, not where the real function code is located. Therefore we have to correct the function address with the help of \verb=dereferenceLinuxJumpTable()=, which walks over the jump table and finds the real address.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=18cm]{images/callmon_sequence_diagram}
+\includegraphics[width=16cm]{images/callmon_sequence_diagram}
 \caption{Sequence diagram of the function enter process}\label{fig:unixfe_figure2}
 \end{figure}
 
@@ -76,19 +76,19 @@ The structure of the event which is also written to the cmlog files looks like t
 The \verb=Coordinator= class uses the singleton design pattern so that we just have one \verb=Coordinator= instance at a time. One of the important tasks of the class is to set up the initial directory structure where callmon stores the log and mod info files. Therefore the function \verb=createInitialDirectories()= is called in the constructor, which creates the following directory structure:
 
 \begin{verbatim}
-  CALLMON_HOME|./logs/<appname>/
+  CALLMON_HOME or current working directory /logs/<appname>/
 \end{verbatim}
 
 On Mac OS X the name of the currently running application ($<$appname$>$) is determined with the help of the \verb=kinfo_proc= structure. On linux we use the process file system, which is a pseudo file system used to access process information from the kernel. We get the name of the application by resolving 
 
 \begin{verbatim}
-  /proc/<pid>/exe (symbolic link)	
+  /proc/<pid>/exe (symbolic link)
 \end{verbatim}
 
 Another important task of the \verb=Coordinator= is to create the \verb=EventWriter= and \verb=FileWatcher=, which will be explained later in more detail. But the most important functionality of the \verb=Coordinator= is to indicate if callmon is allowed to log the function enters and exits in a lockfree way, even in multithreaded environments. This is accomplished by using atomic operations. Since version 4.2 GCC provides a function called \verb=__sync_bool_compare_and_swap()=, which sets and test a variable in an atomic way. The \verb=Coordinator= instance asks the \verb=FileWatcher= if logging is active or not. If logging is active we have to check if we are at the beginning of a new logging cycle. At the beginning of a logging cycle we have to set up certain things such as creating the output directory for the log files, write a pre modinfo file and set the output directory of the \verb=FileWatcher=. The output directory for the current trace is:
 
 \begin{verbatim}
-  CALLMON_HOME|./logs/<appname>/<date_time>
+  CALLMON_HOME or current working directory /logs/<appname>/<date_time>
 \end{verbatim}
 
 If we are not allowed to log we have to check if we are at the end of a logging cycle. At the end of a logging cycle we write a post modinfo file to the current output directory.
@@ -107,7 +107,7 @@ To get the start address and the path of the libraries on Mac OS X we use the fo
 
 On Linux the \verb=dl_iterate_phdr()= function walks through the list of an application's shared objects and calls the function callback once for each object. The first of the three parameters the callback gets, is a pointer to a \verb=dl_phdr_info= structure, which contains the start address and the name of the shared object.
 
-\todo{TODO: explain for what modinfo files are useful}
+With the help of the pre and post modinfo files the metacreator knows which symbols it has to extract. Moreover that the metacreator obtains the corresponding address offsets for the extracted symbols from the pre and post modinfo files.
 
 \subsubsection{Filesystem events}
 
@@ -186,6 +186,8 @@ file specifics, offsets, objdump, see requirements
 
 
 
-\subsection{Metacreator} 
+\subsection{Metacreator} The metacreator running in the unix tool chain of CGA might be the tool which shares the most code with the Windows version. This is possible, since the Dia mechanism used on Windows is called using an interface named \inlinecode{DiaApi}. We provide an alternative implementation of \inlinecode{DiaApi} which is called \inlinecode{GDBWrapper}. This class receives the requests of metacreator and uses \inlinecode{GDBInterface} to resolve the information requested.
 
-\subsubsection{Line number caching} 
+\subsubsection{GDBInterface} The \inlinecode{GDBInterface} class wraps around GDB to retrieve debug information. This is done by starting GDB and communicating with it in terminal style. We send command lines and parse the output provided by GDB using regular expressions. 
+
+\subsubsection{Line number caching} The process to resolve start and end line number of a function using GDB is quite complicated and involves several commands and hence a lot of result parsing. To minimize the processing time, we added a line number cache. This is a map which stores start and end line number for functions. If there are several returns in the body of the same function, line numbers only need to get resolved once.
