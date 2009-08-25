@@ -49,7 +49,7 @@ To ensure that CGA can find the source files for the source code viewer, you nee
   LDFLAGS += -Wl,-Bsymbolic -L/path/to/callmonlib -lunixcallmon_lib
 \end{verbatim}
 
-For ioQuake3, we added the following in \pathname{IOQUAKE3\_ROOT/Makefile} in the \inlinecode{ifeq (\$(PLATFORM),darwin)} section (around line 360):
+For ioQuake3, we added the following in \pathname{IOQUAKE3\_ROOT/Makefile} in the \inlinecode{ifeq (\$(PLATFORM),\\darwin)} section (around line 360):
 
 \begin{verbatim}
   BASE_CFLAGS  = -Wall -Wimplicit -Wstrict-prototypes
