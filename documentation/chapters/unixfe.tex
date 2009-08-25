@@ -121,9 +121,15 @@ The Linux way uses \verb=inotify= which is a Linux kernel subsystem that provide
 
 \subsubsection{Event writer} 
 
-event writer (own thread), PerThreadData, setOutputdirectory, Mutex
+The \inlinecode{EventWriter} has its own worker thread, which is responsible to write the events into thread specific log files (\pathname{profile\_<pid>\_<threadId>.cmlog}). But the most important part of the \inlinecode{EventWriter} is to provide an interface for each thread to add events to a lockfree queue.
 
-The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization. \todo{TODO: explain in more detail}
+Internally every profiled thread has its own \inlinecode{PerThreadData} object, where we store data the event writer needs. We use a standard map to save which thread already has its own \inlinecode{PerThreadData} object. The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization. 
+
+When somebody calls \inlinecode{addEvent()} we create a \inlinecode{PerThreadData} object on demand and try to push the event into the queue. If the queue is full we wait a moment so that the worker (writing) thread can free the queue.
+
+setOutputdirectory
+
+Mutex
 
 \subsubsection{Asynchronous I/O}
 
