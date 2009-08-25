@@ -1,4 +1,4 @@
-\documentclass[]{article}
+\documentclass[a4paper]{article}
 
 \usepackage{pdfsync}
 
@@ -30,7 +30,12 @@
 \usepackage{minitoc}
 
 % url package
-\usepackage{url}
+\usepackage[hyphens]{url}
+
+% enable clickable
+\usepackage[]{hyperref}
+\hypersetup{pdfborder=0 0 0}
+
 
 % This is now the recommended way for checking for PDFLaTeX:
 \usepackage{ifpdf}
