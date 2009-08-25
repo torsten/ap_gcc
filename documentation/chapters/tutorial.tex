@@ -2,6 +2,7 @@
 
 \section{Tutorial}
 \label{sec:Tutorial}
+
 This section shows how to profile a project step by step. In general, the process is quite similar to the process needed to profile a project with the Windows version of callmon. Big differences only appear in the build configuration due to differences in the compiler switches needed by GCC.
 
 \subsection{Preparing the build process} How to prepare the build process.
@@ -44,9 +45,15 @@ To ensure that CGA can find the source files for the source code viewer, you nee
   LDFLAGS += -Wl,-Bsymbolic -L/path/to/callmonlib -lunixcallmon_lib
 \end{verbatim}
 
-\subsection{Building the application} With all the above mentioned set up, you build your project as usual, e.g. by typing \emph{make}.
+\subsection{Building the application}
 
-\subsection{Patching the executable} As soon as the build process has finished, you end up with an executable or library which has all the profiling mechanisms build in. At this point, every single function which was just compiled by GCC is now enriched by profiling logic. Since this may be a lot, you might want to exclude several functions or groups of functions from the profiling process. This is done by patching the binary. Technically, the calls to the instrumentation functions get overwritten by NOP operations, so almost no overhead is involved in calling functions removed from the profiling process.
+With all the above mentioned set up, you build your project as usual, e.g. by typing \emph{make}.
+
+To enable the following command lines to work you might have to move the executables cga\_patchclean and cga\_patch to some location in your PATH for symlink them accordingly.
+
+\subsection{Patching the executable}
+
+As soon as the build process has finished, you end up with an executable or library which has all the profiling mechanisms build in. At this point, every single function which was just compiled by GCC is now enriched by profiling logic. Since this may be a lot, you might want to exclude several functions or groups of functions from the profiling process. This is done by patching the binary. Technically, the calls to the instrumentation functions get overwritten by NOP operations, so almost no overhead is involved in calling functions removed from the profiling process.
 
 \subsubsection{Patch clean} The first thing to do is call cga\_patchclean on the binary like this:
 \begin{verbatim}
