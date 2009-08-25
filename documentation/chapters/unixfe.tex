@@ -150,7 +150,9 @@ Unfortunately the original patch and patchclean tools had some implementation sp
 
 Also the requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and enforces its call on all ways out of a function.  So we could handle enters and exits properly.
 
-Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.  In the following paragraphs each class gets a more detailed description
+Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.
+
+The logic for patching and cleaning happens in the 2 files \pathname{main\_patch.cpp} and \pathname{main\_patchclean.cpp}.  Both files are very similar and use the loosely coupled to above classes.  In the following paragraphs each of the involved classes gets a more detailed description to illustrate the implementation of the patching process on UNIX platforms.
 
 \subsubsection{Class Overview}
 
@@ -178,6 +180,9 @@ Internally the \inlinecode{IncludeExcludeFilter} uses \toolname{c++filt} from th
 
 \paragraph{ExeFilePatcher} This is the class which 
 
+\paragraph{BaseAddressRetriever}
+
+\paragraph{CallsiteRetriever}
 
 
 
