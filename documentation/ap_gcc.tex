@@ -76,55 +76,28 @@
 \maketitle
 \begin{abstract}
 	The CGA - Call Graph Analyzer - system developed at the HPI was indented for Windows based systems only. We ported this tool chain to Mac OS X and Linux systems.
+
+CGA is useful for:
+
+\begin{itemize}
+	\item Program understanding
+	\item Debugging
+	\item Performance analysis
+	\item Quality Assurance
+\end{itemize}
+
+\todo{TODO add why CGA is useful in general}
+
+Viewing an application's call trace in graphical form can be an educational experience. Doing so can help you understand an application's internal behavior and obtain information for program optimization. For example, by optimizing those functions that are called most often, you can get the greatest performance benefit from the least amount of effort. Additionally, a call trace can identify the maximum call depth of user functions, which you can then use to efficiently bind the memory that the call stack uses (an important consideration in embedded systems).
+
+At some stage in everyone's programming career, they will need to read through a lot of code written by another programmer. An important part of program comprehension is building a picture of how the program is structured from a high-level view and call graphs can be an invaluable aid when building this picture. This is particularly useful if the original programmer uses clear function names.
+
+\url{http://www.hpi.uni-potsdam.de/doellner/research/softvis.html}
+
+\todo{why port to linux and mac}
 	
-	\todo{blow this a lil' up}
+\todo{blow this a lil' up}
 \end{abstract}
-
-% ------------------------------------------------------------------------------
-% TODO remove me
-
-\paragraph{TEMPLATE}
-\begin{verbatim}
-Inhaltsvorlage zur Dokumentation – Seminar Softwarevisualisierung SoSe09
-Arbeitspaket: Linux/MacOS-Portierung von CGA
-Portierung von CGA nach Linux/MacOS
-Hindernisse bei der Portierung
-todo
-Coding Richtlinien zur zukünftigen Vermeidung von Cross-Plattform Problemen
-Todo
-Cross-Plattform Buildsystem CMake
-Nutzung von CMake unter Windows, Linux und MacOS
-todo
-CGA Coding Richtlinien zur Nutzung von CMake
-Todo
-Portierung des Windows-basierten Faktextraktionsmechanismus Callmon nach Linux/MacOS
-Analysierbare Softwaresysteme – Notwendige Voraussetzungen
-Mit welcher GCC Version muss das zu analysierende System gebaut sein?
-Gibt es bestimmte Systemlibs, gegen die das zu analysierende System gelinkt werden muss?
-Sind Inkompatibilitäten zu erwarten mit irgendwelchen Systemlibs?
-…
-Todo
-Workflow der Callmon Toolchain
-Todo
-Einbindung von 3rd Party Tools 
-Welche Datenquelle für Debug-Informationen wird verwendet? Gibt es Alternativen? 
-Warum die eine gewählt?
-Wie werden die Funktionseinsprungsaddressen und Funktionsausstiegsadressen bestimmt? 
-Gibt es Alternativen? Welche Unterschiede gibt es bei Linux und Mac?; Todo
-Implementierung der Callmon Bibliothek unter Linux/MacOS
-Wie ist der Callmon-Kern nach Linux/MacOS portiert worden? 
-Wie wurde der Start/Stopp-Mechanismus übertragen? 
-Wie der Mutex-freie Ereignissammelmechenismus und wie die Ereignis-Serialisierung? …
-Todo
-Tutorial: Kontrollfluss-Analyse von Audacity
-Charakterisierung des Softwaresystems (LOC, etc.)
-Todo
-Exemplarisches Vorgehen bei der Faktextraktion (und anschließenden Visualisierung)
-Todo
-\end{verbatim}
-
-% TODO remove me (until here ^^)
-%-------------------------------------------------------------------------------
 
 \newpage
 
@@ -135,10 +108,6 @@ Todo
 % \addtolength{\parskip}{\baselineskip}
 \setlength{\parskip}{0.27cm}
 
-
-\input{chapters/introduction} 
-
-\newpage
 
 \input{chapters/results} 
 
