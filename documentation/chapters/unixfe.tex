@@ -20,11 +20,11 @@ First of all we want to give a quick overview about the whole workflow of the fa
 	\item Import and visualize the trace with CGA.
 \end{enumerate}
 
-The UNIX fact extraction mechanism is a non-intrusive, light-weight way for logging function calls in C/C++ software systems that are built with GCC version 4.2 or higher. Callmon is used to log the sequence of function calls from a running application. Time stamps are obtained for both entry and exit points of each function. The logging mechanism does not slow down the users application when being deactivated. This is obtained by patching the executable and libraries files of the application. All assembler instructions, which are needed for logging are replaced by assembler NOPs. If the user wants to log certain activities he can patch the executable again so that the logging for this functions are now active. For more detailed information about the process have a look at the tutorial section \ref{sec:Tutorial}.
+The UNIX fact extraction mechanism is a non-intrusive, light-weight way for logging function calls in C/C++ software systems that are built with GCC version 4.2 or higher. Callmon is used to log the sequence of function calls from a running application. Time stamps are obtained for both entry and exit points of each function. The logging mechanism does not slow down the users application when being deactivated. This is obtained by patching the executable and libraries files of the application. All assembler instructions, which are needed for calling logging functions are replaced by assembler NOPs. If the user wants to log certain activities he can patch the executable again so that the logging for this functions is now active. For more detailed information about the process have a look at the tutorial section \ref{sec:Tutorial}.
 
 \subsection{Callmon}
 
-The central element of the tracing mechanism is callmon. Callmon is a static library, which you have to link against the application you want to instrument. But the most important part is the GCC parameter \inlinecode{-finstrument-functions}. We will explain this later in more detail. To get an overview about the classes which are involved in the tracing mechanism have a look at figure \ref{fig:UNIXfe_figure1}.
+The central element of the tracing mechanism is callmon. Callmon is a static library, which you have to link into the application you want to instrument. But the most important part is the GCC parameter \inlinecode{-finstrument-functions}. We will explain this later in more detail. To get an overview about the classes which are involved in the tracing mechanism have a look at figure \ref{fig:UNIXfe_figure1}.
 
 \begin{figure}[ht]
 \centering
@@ -32,7 +32,7 @@ The central element of the tracing mechanism is callmon. Callmon is a static lib
 \caption{Class diagram of the callmon library}\label{fig:UNIXfe_figure1}
 \end{figure}
 
-The \verb=StartExitHandler= \todo{new font here? use it all over?} helps to set up crash handlers for the most common signals (SIGINT, SIGILL, SIGSEGV, SIGFPE, SIGTERM, SIGABRT, SIGBUS, SIGHUP)\footnote{\url{http://en.wikipedia.org/wiki/Signal_(computing)}} and an exit handler right after startup (before main). We ensure that the constructor of the \verb=StartExitHandler= is executed before the main routine of the application with the help of a static variable. Static variables are initialized before the first call of the applications main routine. The \verb=exithandler()= function deletes the \verb=Coordinator= instance. If the application crashes the crash handler gets executed, which processes just a normal shutdown and cleanup.
+The \verb=StartExitHandler= helps to set up crash handlers for the most common signals (SIGINT, SIGILL, SIGSEGV, SIGFPE, SIGTERM, SIGABRT, SIGBUS, SIGHUP)\footnote{\url{http://en.wikipedia.org/wiki/Signal_(computing)}} and an exit handler right after startup (before main). We ensure that the constructor of the \verb=StartExitHandler= is executed before the main routine of the application with the help of a static variable. Static variables are initialized before the first call of the applications main routine. The \verb=exithandler()= function deletes the \verb=Coordinator= instance. If the application crashes the crash handler gets executed, which processes just a normal shutdown and cleanup.
 
 \verb=Callmon= provides the functionality to log function enters and exists. Every thread of the application has its own \verb=Callmon= object. The \verb=Coordinator= is responsible to create the \verb=EventWriter=, the \verb=FileWatcher= and the directory structure for the log files. It also coordinates if callmon is allowed to log an event. The \verb=EventWriter= runs in its own thread and receives events from all the applications threads through a lock free queue. It uses asynchronous I/O to fill the thread specific log files. The \verb=FileWatcher= runs also in its own thread and listens on events of the file system. If a file called callmond.cmd is created or deleted we indicate this with a boolean. The \verb=ModInfoHandler= is responsible to write at the beginning and the end of the logging a list of used libraries and their start address to a modinfo file. Some classes are explained in more detail in the next sections.
 
@@ -58,7 +58,7 @@ On Linux when a function of a shared library gets called from the main executabl
 
 Figure \ref{fig:UNIXfe_figure2} illustrates a simplified event logging process for the first \verb=__cyg_profile_func_enter()= in which we assume that logging is enabled. If the user starts the application the constructor of the \verb=StartExitHandler= is executed up front and the exit and crash handler is set up. In the next step the \verb=__cyg_profile_func_enter()= is called. On Mac OS X and Linux exists no DllMain mechanism, so we have to use lazy initialization and thread-local storage to address this problem. A callmon instance is requested and created on demand if there is no instance for this thread. The pointer to the callmon instance is stored in the thread-local storage. After the lazy	initialization of the callmon object we check if logging is active. To determine if we are allowed to log an event, we need to create a coordinator (singleton), which is also responsible to initialize the event writer and file watcher (detailed information can be found in the following sections). Both the event writer and file watcher run in their own thread. After this, callmon can ask the coordinator if logging is active or not. The whole logging mechanism is enabled if the file watcher finds a \verb=callom.cmd= file in the callmon home directory. If this was the start of a new logging procedure we also write a pre modinfo file to the specified output directory.
 
-In the next step \verb=__cyg_profile_func_enter()= collects the whole data we need to write an event to the thread specific log file. This data is passed to the \verb=enterProcedure()= of the callmon instance. In this function we push a new \verb=CallInfo= object on our shadow stack. On the one hand we need the shadow stack to recognize if there was an exception during the execution, because then we will have a different return behavior of the function. On the other hand the shadow stack is needed to address the problem if we have an unprofiled function call between two profiled functions. Then we call the \verb=registerEvent()= function, which creates a new \verb=Event= object. The Event is then written with the help of the \verb=EventWriter= to a log file.
+In the next step \verb=__cyg_profile_func_enter()= collects the whole data we need to write an event to the thread specific log file. This data is passed to the \verb=enterProcedure()= of the callmon instance. In this function we push a new \verb=CallInfo= object on our shadow stack. On one hand we need the shadow stack to recognize if there was an exception during the execution, because then we will have a different return behavior of the function. On the other hand the shadow stack is needed to address the problem if we have an unprofiled function call between two profiled functions. Then we call the \verb=registerEvent()= function, which creates a new \verb=Event= object. The Event is then written with the help of the \verb=EventWriter= to a log file.
 
 The whole procedure for \verb=__cyg_profile_func_exit()= is very similar, beside that the \verb=exitProcedure()= pops the shadow stack until we find a call record that matches the current stack layout. If we did not find a call record that matches we register an exceptional event.
 
@@ -79,16 +79,16 @@ The \verb=Coordinator= class uses the singleton design pattern so that we just h
   CALLMON_HOME or current working directory /logs/<appname>/
 \end{verbatim}
 
-On Mac OS X the name of the currently running application ($<$appname$>$) is determined with the help of the \verb=kinfo_proc= structure. On linux we use the process file system, which is a pseudo file system used to access process information from the kernel. We get the name of the application by resolving 
+On Mac OS X the name of the currently running application ($<$appname$>$) is determined with the help of the \verb=kinfo_proc= structure. On Linux we use the process file system, which is a pseudo file system used to access process information from the kernel. We get the name of the application by resolving 
 
 \begin{verbatim}
   /proc/<pid>/exe (symbolic link)
 \end{verbatim}
 
-Another important task of the \verb=Coordinator= is to create the \verb=EventWriter= and \verb=FileWatcher=, which will be explained later in more detail. But the most important functionality of the \verb=Coordinator= is to indicate if callmon is allowed to log the function enters and exits in a lockfree way, even in multithreaded environments. This is accomplished by using atomic operations. Since version 4.2 GCC provides a function called \verb=__sync_bool_compare_and_swap()=, which sets and test a variable in an atomic way. The \verb=Coordinator= instance asks the \verb=FileWatcher= if logging is active or not. If logging is active we have to check if we are at the beginning of a new logging cycle. At the beginning of a logging cycle we have to set up certain things such as creating the output directory for the log files, write a pre modinfo file and set the output directory of the \verb=FileWatcher=. The output directory for the current trace is:
+Another important task of the \verb=Coordinator= is to create the \verb=EventWriter= and \verb=FileWatcher=, which will be explained later in more detail. But the most important functionality of the \verb=Coordinator= is to indicate if callmon is allowed to log the function enters and exits in a lock free way, even in multithreaded environments. This is accomplished by using atomic operations. Since version 4.2 GCC provides a function called \verb=__sync_bool_compare_and_swap()=, which sets and test a variable in an atomic way. The \verb=Coordinator= instance asks the \verb=FileWatcher= if logging is active or not. If logging is active we have to check if we are at the beginning of a new logging cycle. At the beginning of a logging cycle we have to set up certain things such as creating the output directory for the log files, write a pre modinfo file and set the output directory of the \verb=FileWatcher=. The output directory for the current trace is:
 
 \begin{verbatim}
-  CALLMON_HOME or current working directory /logs/<appname>/<date_time>
+  CALLMON_HOME or <working directory>/logs/<appname>/<date_time>
 \end{verbatim}
 
 If we are not allowed to log we have to check if we are at the end of a logging cycle. At the end of a logging cycle we write a post modinfo file to the current output directory.
@@ -107,7 +107,7 @@ To get the start address and the path of the libraries on Mac OS X we use the fo
 
 On Linux the \verb=dl_iterate_phdr()= function walks through the list of an application's shared objects and calls the function callback once for each object. The first of the three parameters the callback gets, is a pointer to a \verb=dl_phdr_info= structure, which contains the start address and the name of the shared object.
 
-With the help of the pre and post modinfo files the metacreator knows which symbols it has to extract. Moreover that the metacreator obtains the corresponding address offsets for the extracted symbols from the pre and post modinfo files.
+With the help of the pre and post modinfo files the metacreator knows which images to extract symbols from. Moreover that the metacreator obtains the corresponding address offsets for the extracted symbols from the pre and post modinfo files.
 
 \subsubsection{Filesystem events}
 
@@ -121,23 +121,23 @@ The Linux way uses \verb=inotify= which is a Linux kernel subsystem that provide
 
 \subsubsection{Event writer} 
 
-The \inlinecode{EventWriter} has its own worker thread, which is responsible to write the events into thread specific log files (\pathname{profile\_<pid>\_<threadId>.cmlog}). But the most important part of the \inlinecode{EventWriter} is to provide an interface for each thread to add events to a lockfree queue. The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization.
+The \inlinecode{EventWriter} has its own worker thread, which is responsible to write the events into thread specific log files (\pathname{profile\_<pid>\_<threadId>.cmlog}). But the most important part of the \inlinecode{EventWriter} is to provide an interface for each thread to add events to a lock free queue. The lock free queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization.
 
 Internally every profiled thread has its own \inlinecode{PerThreadData} object, where we store data the event writer needs. We use a standard map to save which thread already has its own \inlinecode{PerThreadData} object. The only two situations where we have to lock this map, is when we create a new \inlinecode{PerThreadData} object and when set a new output directory. This situations just occur at the beginning of a new logging cycle.
 
-When somebody calls \inlinecode{addEvent()} we create a \inlinecode{PerThreadData} object on demand and try to push the event into the queue. If the queue is full we wait a moment so that the worker (writing) thread can free the queue.
+When somebody calls \inlinecode{addEvent()} we create a \inlinecode{PerThreadData} object on demand and try to push the event into the queue. If the queue is full we end the threads current quantum so that the worker (writing) thread can free the queue.
 
 With the help of the cga toolbar the user can start and stop logging. Every trace is stored in a separate folder, so we have to set the output directory of the \inlinecode{EventWriter} every time we start a new logging cycle. During this set up we have to wait until all queued events of the threads are written to the log files.
 
 \subsubsection{Asynchronous I/O}
 
-We use asynchronous I/O to write the logged function entries and exits to a thread specific log file. The \verb=EventWriter= runs in its own thread and stores the received events, as described in the previous section, in a lock-free queue. If the \verb=EventWriter= thread is scheduled we check if there are any events in the queue and write them to the log file. A very simple approach to write the events to the log file would be synchronous I/O, which blocks the progress of a program until the operations are completed. The alternative is to start the communication and then perform processing that does not require that the I/O has completed. This is called asynchronous I/O and is much more efficient then synchronous I/O.
+We use asynchronous I/O to write the logged function entries and exits to a thread specific log file. The \verb=EventWriter= runs in its own thread and stores the received events, as described in the previous section, in a lock free queue. If the \verb=EventWriter= thread is scheduled we check if there are any events in the queue and write them to the log file. A very simple approach to write the events to the log file would be synchronous I/O, which blocks the progress of a program until the operations are completed. The alternative is to start the communication and then perform processing that does not require that the I/O has completed. This is called asynchronous I/O and is much more efficient then synchronous I/O.
 
 To perform asynchronous I/O we use the POSIX standard for asynchronous input and output. \verb=aio_write()= gets as parameter a \verb=aiocb= structure which stores a file descriptor, file offset, the location of the buffer we want to write and the length of transfer. For more specific information have a look at the \verb=aio(4)= man page.
 
 \subsection{Patch and Patchclean}
 
-Unfortunately the original patch and patchclean tools had some implementation specific limitations which made a direct port to UNIX hardly feasible.  They did use the DIA API and \inlinecode{CALLMONTOOLS::PatchWriter} uses Windows specific code to write the actual executable file.
+Unfortunately the original patch and patchclean tools had some implementation specific limitations which made a direct port to UNIX hardly feasible.  They did use DIA and \inlinecode{CALLMONTOOLS::PatchWriter} uses Windows specific code to write the actual executable file.
 
 \begin{figure}[ht]
 \centering
