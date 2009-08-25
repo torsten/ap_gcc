@@ -41,12 +41,11 @@ But extending our implementation to handle more versions of GDB is as easy as fi
 
 \paragraph{GNU Binutils}
 
-On Linux we are using \emph{objdump} from the GNU binutils distribution\footnote{http://www.gnu.org/software/binutils/}.
-All our code was tested with version 2.19.1 of these tools.  On Mac OS X we a using \emph{otool} as provided by Apple bundled with XCode version 3.1.3\footnote{http://developer.apple.com/technology/Xcode.html}.
+On Linux we are using \emph{objdump} from the GNU Binutils distribution\footnote{http://www.gnu.org/software/binutils/} to extract data from executable files and shared objects.
+All our code was tested with version 2.19.1 of these tools.  On Mac OS X we are using \emph{otool} as provided by Apple bundled with XCode version 3.1.3\footnote{http://developer.apple.com/technology/Xcode.html}.
 
 Like in the GDB case we are parsing the output using regular expressions, so changes in the output format of these tools may break our parsing, but again, only some regular expression need to be adjusted\footnote{See files factextraction/unix/unixfactextraction/*retriever.cpp}.
 
-\todo{c++filt is part of gnu binutils, explain usage}
+\emph{c++filt} is used in includeexcludefilter.cpp to de-mangle C++ symbols on Linux and Mac OS X.
 
-
-\paragraph{XCode} \todo{comes all with xcode on Mac OS X, 2/3 sentences on that...}
+\paragraph{XCode} GCC, GDB and GNU Binutils are already installed on Mac OS X with XCode.  So whereas on Linux your are responsible for installing the separate packages, on OS X our only dependency is XCode.
