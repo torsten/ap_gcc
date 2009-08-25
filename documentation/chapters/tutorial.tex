@@ -52,10 +52,10 @@ To ensure that CGA can find the source files for the source code viewer, you nee
 For ioQuake3, we added the following in \pathname{IOQUAKE3\_ROOT/Makefile} in the \inlinecode{ifeq (\$(PLATFORM),darwin)} section (around line 360):
 
 \begin{verbatim}
-    BASE_CFLAGS  = -Wall -Wimplicit -Wstrict-prototypes
-    BASE_CFLAGS += -fno-inline
-    BASE_CFLAGS += -finstrument-functions 
-    LDFLAGS     += -L/path/to/callmonlib -lunixcallmon_lib -lstdc++
+  BASE_CFLAGS  = -Wall -Wimplicit -Wstrict-prototypes
+  BASE_CFLAGS += -fno-inline
+  BASE_CFLAGS += -finstrument-functions 
+  LDFLAGS     += -L/path/to/callmonlib -lunixcallmon_lib -lstdc++
 \end{verbatim}
 
 \subsection{Building the application} With all the above mentioned set up, you build your project as usual, e.g. by typing \toolname{make}.
