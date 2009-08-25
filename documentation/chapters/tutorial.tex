@@ -5,6 +5,8 @@
 
 This section shows how to profile a project step by step. In general, the process is quite similar to the process needed to profile a project with the Windows version of callmon. Big differences only appear in the build configuration due to differences in the compiler switches needed by GCC.
 
+In this tutorial, we use ioQuake3 profiling on Mac OS X as a sample, but for other projects, the process stays the same.
+
 \subsection{Preparing the build process} How to prepare the build process.
 
 \subsubsection{Parameters to GCC} This is a list of parameters needed by GCC when profiling with unix fact extraction.
@@ -39,28 +41,35 @@ Without this option, symbolic function call information is removed from the resu
 
 To ensure that CGA can find the source files for the source code viewer, you need to provide GCC with the absolute path to the source file while compiling.
 
-\subsubsection{Putting it all together}
-
-If the project you want to analyze is build using make, you might want to add the following to the projects Makefile:
+\subsubsection{Putting it all together} If the project you want to analyze is build using make, you might want to add the following to the projects Makefile:
 
 \begin{verbatim}
   CFLAG   += -g -finstrument-functions -fno-inline 
+  CXXFLAG += -g -finstrument-functions -fno-inline 
   LDFLAGS += -Wl,-Bsymbolic -L/path/to/callmonlib -lunixcallmon_lib
 \end{verbatim}
 
-\subsection{Building the application}
+For ioQuake3, we added the following in \pathname{IOQUAKE3\_ROOT/Makefile} in the \inlinecode{ifeq (\$(PLATFORM),darwin)} section (around line 360):
 
-With all the above mentioned set up, you build your project as usual, e.g. by typing \toolname{make}.
+\begin{verbatim}
+    BASE_CFLAGS  = -Wall -Wimplicit -Wstrict-prototypes
+    BASE_CFLAGS += -fno-inline
+    BASE_CFLAGS += -finstrument-functions 
+    LDFLAGS     += -L/path/to/callmonlib -lunixcallmon_lib -lstdc++
+\end{verbatim}
 
-To enable the following command lines to work you might have to move the executables \toolname{cga\_patchclean} and \toolname{cga\_patch} to some location in your \inlinecode{PATH} for symlink them accordingly.
+\subsection{Building the application} With all the above mentioned set up, you build your project as usual, e.g. by typing \toolname{make}.
 
-\subsection{Patching the executable}
+The ioQuake3 has a special target named \inlinecode{debug}, so you need to type \inlinecode{make debug} to include debugging symbols in the executable.
+
+\subsection{Patching the executable} To enable the following command lines to work you might have to move the executables \toolname{cga\_patchclean} \toolname{cga\_patch}, \toolname{cgatoolbar} and \toolname{metacreator} to some location in your \inlinecode{PATH} or symlink them accordingly.
 
 As soon as the build process has finished, you end up with an executable or library which has all the profiling mechanisms build in. At this point, every single function which was just compiled by GCC is now enriched by profiling logic. Since this may be a lot, you might want to exclude several functions or groups of functions from the profiling process. This is done by patching the binary. Technically, the calls to the instrumentation functions get overwritten by NOP operations, so almost no overhead is involved in calling functions removed from the profiling process.
 
 \subsubsection{Patch clean} The first thing to do is call \toolname{cga\_patchclean} on the binary like this:
 \begin{verbatim}
-  $ cga_patchclean myBinary myBinary.patch
+  $ cd build/debug-darwin-i386
+  $ cga_patchclean ioquake3.i386 ioquake3.i386.patch
 \end{verbatim}
 The first parameter specifies the binary to patch. The second parameter specifies a patch file name. In this patch file, \toolname{cga\_patchclean} will write out all the locations from which profiling calls were removed along with the opcodes removed that realized the call. This information is needed by \toolname{cga\_patch} to re-include the call opcodes for certain functions in the next step.
 
@@ -69,13 +78,13 @@ The first parameter specifies the binary to patch. The second parameter specifie
 Provide a list of patterns in the include section, as well a list of patterns in the exclude section. Then, call patch like this:
 
 \begin{verbatim}
-  $ cga_patch myBinary myBinary.patch myPatternsFile.txt
+  $ cga_patch ioquake3.i386 ioquake3.i386.patch myPatternsFile.txt
 \end{verbatim}
 
 You may leave the patterns file parameter empty to re-include all functions in the profiling process. Like this:
 
 \begin{verbatim}
-  $ cga_patch myBinary myBinary.patch
+  $ cga_patch ioquake3.i386 ioquake3.i386.patch
 \end{verbatim}
 
 \subsection{Using CGA Toolbar}
@@ -85,15 +94,15 @@ The CGA Toolbar can be used as usual. It needs to set up the environment variabl
 \begin{verbatim}
   <working directory>/
   |
-  |- myBinary
-  |- myBinary.patch
+  |- ioquake3.i386
+  |- ioquake3.i386.patch
   |- myPatternsFile.txt
 \end{verbatim}
 
 Create a directory where the CGA Toolbar can operate on, like this:
 
 \begin{verbatim}
-  $ mkdir -p logs/myBinary
+  $ mkdir -p logs/ioquake3.i386
 \end{verbatim}
 
 You end up with a directory structure like this:
@@ -103,12 +112,12 @@ You end up with a directory structure like this:
   |
   |- logs/
   |  |
-  |  |- myBinary/
+  |  |- ioquake3.i386/
   |     |
   |     |
   |
-  |- myBinary
-  |- myBinary.patch
+  |- ioquake3.i386
+  |- ioquake3.i386.patch
   |- myPatternsFile.txt
 \end{verbatim}
 
@@ -118,19 +127,19 @@ Now, fire up the CGA Toolbar like this:
   $ CALLMON_HOME="<working directory>" cgatoolbar
 \end{verbatim}
 
-The string \emph{myBinary} should now show up in the drop down menu in the CGA Toolbar. If you now hit the start button, CGA Toolbar will create a file called \pathname{callmon.cmd}:
+The string \emph{ioquake3} should now show up in the drop down menu in the CGA Toolbar. If you now hit the start button, CGA Toolbar will create a file called \pathname{callmon.cmd}:
 
 \begin{verbatim}
   <working directory>/
   |
   |- logs/
   |  |
-  |  |- myBinary/
+  |  |- ioquake3.i386/
   |     |
   |     |- callmon.cmd
   |
-  |- myBinary
-  |- myBinary.patch
+  |- ioquake3.i386
+  |- ioquake3.i386.patch
   |- myPatternsFile.txt
 \end{verbatim}
 
@@ -141,17 +150,17 @@ This tells callmon to log function calls. Hitting the stop button will remove th
 Run the application as usual for example like this:
 
 \begin{verbatim}
-  $ ./myBinary -someParameter=someValue
+  $ ./ioquake3.i386
 \end{verbatim}
 
-If you now press start and stop on the CGA Toolbar, new traces will be generated. Each trace will reside in the \pathname{logs/myBinary/} directory. Each trace will be put into its own directory depending on the date and time the logging started at. So after you created several traces, you might end up with a directory structure like this:   
+If you now press start and stop on the CGA Toolbar, new traces will be generated. Each trace will reside in the \pathname{logs/ioquake3.i386/} directory. Each trace will be put into its own directory depending on the date and time the logging started at. So after you created several traces, you might end up with a directory structure like this:   
 
 \begin{verbatim}
   <working directory>/
   |
   |- logs/
   |  |
-  |  |- myBinary/
+  |  |- ioquake3.i386/
   |     |
   |     |- callmon.cmd
   |     |- 090229_143523
@@ -159,8 +168,8 @@ If you now press start and stop on the CGA Toolbar, new traces will be generated
   |     |- 090229_143559
   |     |- 090229_143614
   |
-  |- myBinary
-  |- myBinary.patch
+  |- ioquake3.i386
+  |- ioquake3.i386.patch
   |- myPatternsFile.txt
 \end{verbatim}
 
@@ -180,10 +189,10 @@ The first number in the .cmlog filename describes the process identifier, the se
 
 \subsection{Using Metacreator}
 
-The next step is to enrich the collected information by running metacreator. Therefor you simple fire up metacreator and provide it with a traces directory as parameter, like this:
+The next step is to enrich the collected information by running \toolname{metacreator}. Do do this, you simple fire up \toolname{metacreator} and provide it with a traces directory as parameter, like this:
 
 \begin{verbatim}
-  $ metacreator ./logs/myBinary/090229_143542
+  $ metacreator ./logs/ioquake3.i386/090229_143542
 \end{verbatim}
 
 Depending on the amount of events you collected, metacreator will take some time now. For all the logged calls, metacreator will now resolve debugging information from the binary. Once finished, a new .callmon file was created in the traces directory. So it should look like this now:
@@ -202,3 +211,9 @@ Depending on the amount of events you collected, metacreator will take some time
 All the preparations are done now. You can now start up CGA and load the trace.
 
 \subsection{Loading the trace(s) into CGA} Start the CGA executable, create a new project. Then, select manage traces, click the add button, select your .callmon file and let CGA import the trace.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=16cm]{images/ioquake3_trace}
+\caption{Trace Visualisation for ioQuake3}\label{fig:ioquake3_trace}
+\end{figure}
