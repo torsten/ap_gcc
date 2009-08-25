@@ -9,7 +9,7 @@ In this section we want to explain the unix fact extraction mechanism in more de
 First of all we want to give a quick overview about the whole workflow of the fact extraction tool chain. These are the steps if you want to instrument your application and visualize the trace in CGA:
 
 \begin{enumerate}
-	\item Building the application with special compiler flags and linking the callmon.{dll,dylib,so}.
+	\item Building the application with special compiler flags and linking the unixcallmon\_lib.\{a,lib\}.
 	\item Patching the executable results in an executable with just NOPs and a patch file (patch clean).
 	\item Patching the executable with the help of an include/exclude file so that we just have specific logging enabled (patch).
 	\item Executing the application.
@@ -121,16 +121,19 @@ The Linux way uses \verb=inotify= which is a Linux kernel subsystem that provide
 
 \subsubsection{Event writer} 
 
-event writer (own thread), PerThreadData, setOutputdirectory, Mutex
+The \inlinecode{EventWriter} has its own worker thread, which is responsible to write the events into thread specific log files (\pathname{profile\_<pid>\_<threadId>.cmlog}). But the most important part of the \inlinecode{EventWriter} is to provide an interface for each thread to add events to a lockfree queue. The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization.
 
-The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization. \todo{TODO: explain in more detail}
+Internally every profiled thread has its own \inlinecode{PerThreadData} object, where we store data the event writer needs. We use a standard map to save which thread already has its own \inlinecode{PerThreadData} object. The only two situations where we have to lock this map, is when we create a new \inlinecode{PerThreadData} object and when set a new output directory. This situations just occur at the beginning of a new logging cycle.
+
+When somebody calls \inlinecode{addEvent()} we create a \inlinecode{PerThreadData} object on demand and try to push the event into the queue. If the queue is full we wait a moment so that the worker (writing) thread can free the queue.
+
+With the help of the cga toolbar the user can start and stop logging. Every trace is stored in a separate folder, so we have to set the output directory of the \inlinecode{EventWriter} every time we start a new logging cycle. During this set up we have to wait until all queued events of the threads are written to the log files.
 
 \subsubsection{Asynchronous I/O}
 
 We use asynchronous I/O to write the logged function entries and exits to a thread specific log file. The \verb=EventWriter= runs in its own thread and stores the received events, as described in the previous section, in a lock-free queue. If the \verb=EventWriter= thread is scheduled we check if there are any events in the queue and write them to the log file. A very simple approach to write the events to the log file would be synchronous I/O, which blocks the progress of a program until the operations are completed. The alternative is to start the communication and then perform processing that does not require that the I/O has completed. This is called asynchronous I/O and is much more efficient then synchronous I/O.
 
 To perform asynchronous I/O we use the POSIX standard for asynchronous input and output. \verb=aio_write()= gets as parameter a \verb=aiocb= structure which stores a file descriptor, file offset, the location of the buffer we want to write and the length of transfer. For more specific information have a look at the \verb=aio(4)= man page.
-
 
 \subsection{Patch and Patchclean}
 
