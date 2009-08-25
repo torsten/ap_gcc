@@ -8,7 +8,7 @@ There are no special things to consider while writing code which will be build u
 
 The \toolname{cmake} command line utility uses the \pathname{CMakeLists.txt} files to generate for example Visual Studio project files or Makefiles.
 
-\subsection{Finding Dependencies} One of CMake's great features is to automatically find libraries the code depends on. This is done by special scripts. Usually, those scripts search in common paths like \pathname{/usr/include} and \pathname{/usr/lib} for certain patterns like a library file name or a header file. Hence, this feature is very useful on Unix platforms. On Windows, it is common to set dependency paths in the CMake GUI. See below for details.
+\subsection{Finding Dependencies} One of CMake's great features is to automatically find libraries the code depends on. This is done by special scripts. Usually, those scripts search in common paths like \pathname{/usr/include} and \pathname{/usr/lib} for certain patterns like a library file name or a header file. Hence, this feature is very useful on UNIX platforms. On Windows, it is common to set dependency paths in the CMake GUI. See below for details.
 
 We added a script for finding VRS. If VRS is not installed but located in some custom path, or you are using a Windows platform, the variable \inlinecode{VRS\_DIR} can be set to the VRS root directory. See below how this is done.
 
@@ -19,7 +19,7 @@ We create a new directory for CMake generated files. This keeps the project stru
 $ cd path/to/cga/root
 $ mkdir build
 $ cd build
-$ VRS_DIR="/my/path/to/vrs/" cmake -G "Unix Makefiles" ..
+$ VRS_DIR="/my/path/to/vrs/" cmake -G "UNIX Makefiles" ..
 $ make
 \end{verbatim}
 
@@ -45,7 +45,7 @@ By the way, on Linux there is, like on Windows systems, a GUI that helps configu
 
 
 \subsection{On Windows}
-Since on Windows the automatic dependency finding does not work like on unix systems (because it is not possible to predict where libraries and headers of dependencies are placed) some more steps are needed, but all of them are straight forward. You need the CGA dependency package on your system.
+Since on Windows the automatic dependency finding does not work like on UNIX systems (because it is not possible to predict where libraries and headers of dependencies are placed) some more steps are needed, but all of them are straight forward. You need the CGA dependency package on your system.
 
 \begin{itemize}
 	\item Start up the CMake GUI

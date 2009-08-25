@@ -45,7 +45,7 @@ On Linux we are using \toolname{objdump} from the GNU Binutils distribution\foot
 All our code was tested with version 2.19.1 of these tools.  On Mac OS X we are using \toolname{otool} as provided by Apple bundled with Xcode version 3.1.3\footnote{\url{http://developer.apple.com/technology/Xcode.html}}.
 
 Like in the GDB case we are parsing the output using regular expressions, so changes in the output format of these tools may break our parsing, but again, only some regular expression need to be adjusted\footnote{See files
-\pathname{baseaddressretriever.cpp} and \pathname{callsiteretriever.cpp} in \pathname{factextraction/unix/unixfactextraction/}}.
+\pathname{baseaddressretriever.cpp} and \pathname{callsiteretriever.cpp} in \pathname{factextraction/UNIX/UNIXfactextraction/}}.
 
 \toolname{c++filt} (also part of binutils) is used in \pathname{includeexcludefilter.cpp} to de-mangle C++ symbols on Linux and Mac OS X.
 

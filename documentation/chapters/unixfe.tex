@@ -1,15 +1,15 @@
 %!TEX root = ../ap_gcc.tex
 
-\section{Unix fact extraction mechanism in detail}
+\section{UNIX fact extraction mechanism in detail}
 
-In this section we want to explain the unix fact extraction mechanism in more detail. Especially we want to explain how we implemented the callmon library, the executable patching mechanism and metacreator.
+In this section we want to explain the UNIX fact extraction mechanism in more detail. Especially we want to explain how we implemented the callmon library, the executable patching mechanism and metacreator.
 
 \subsection{Overview}
 
 First of all we want to give a quick overview about the whole workflow of the fact extraction tool chain. These are the steps if you want to instrument your application and visualize the trace in CGA:
 
 \begin{enumerate}
-	\item Building the application with special compiler flags and linking the unixcallmon\_lib.\{a,lib\}.
+	\item Building the application with special compiler flags and linking the UNIXcallmon\_lib.\{a,lib\}.
 	\item Patching the executable results in an executable with just NOPs and a patch file (patch clean).
 	\item Patching the executable with the help of an include/exclude file so that we just have specific logging enabled (patch).
 	\item Executing the application.
@@ -20,16 +20,16 @@ First of all we want to give a quick overview about the whole workflow of the fa
 	\item Import and visualize the trace with CGA.
 \end{enumerate}
 
-The unix fact extraction mechanism is a non-intrusive, light-weight way for logging function calls in C/C++ software systems that are built with GCC version 4.2 or higher. Callmon is used to log the sequence of function calls from a running application. Time stamps are obtained for both entry and exit points of each function. The logging mechanism does not slow down the users application when being deactivated. This is obtained by patching the executable and libraries files of the application. All assembler instructions, which are needed for logging are replaced by assembler NOPs. If the user wants to log certain activities he can patch the executable again so that the logging for this functions are now active. For more detailed information about the process have a look at the tutorial section \ref{sec:Tutorial}.
+The UNIX fact extraction mechanism is a non-intrusive, light-weight way for logging function calls in C/C++ software systems that are built with GCC version 4.2 or higher. Callmon is used to log the sequence of function calls from a running application. Time stamps are obtained for both entry and exit points of each function. The logging mechanism does not slow down the users application when being deactivated. This is obtained by patching the executable and libraries files of the application. All assembler instructions, which are needed for logging are replaced by assembler NOPs. If the user wants to log certain activities he can patch the executable again so that the logging for this functions are now active. For more detailed information about the process have a look at the tutorial section \ref{sec:Tutorial}.
 
 \subsection{Callmon}
 
-The central element of the tracing mechanism is callmon. Callmon is a static library, which you have to link against the application you want to instrument. But the most important part is the GCC parameter \inlinecode{-finstrument-functions}. We will explain this later in more detail. To get an overview about the classes which are involved in the tracing mechanism have a look at figure \ref{fig:unixfe_figure1}.
+The central element of the tracing mechanism is callmon. Callmon is a static library, which you have to link against the application you want to instrument. But the most important part is the GCC parameter \inlinecode{-finstrument-functions}. We will explain this later in more detail. To get an overview about the classes which are involved in the tracing mechanism have a look at figure \ref{fig:UNIXfe_figure1}.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=16cm]{images/callmon_class_diagram}
-\caption{Class diagram of the callmon library}\label{fig:unixfe_figure1}
+\caption{Class diagram of the callmon library}\label{fig:UNIXfe_figure1}
 \end{figure}
 
 The \verb=StartExitHandler= \todo{new font here? use it all over?} helps to set up crash handlers for the most common signals (SIGINT, SIGILL, SIGSEGV, SIGFPE, SIGTERM, SIGABRT, SIGBUS, SIGHUP)\footnote{\url{http://en.wikipedia.org/wiki/Signal_(computing)}} and an exit handler right after startup (before main). We ensure that the constructor of the \verb=StartExitHandler= is executed before the main routine of the application with the help of a static variable. Static variables are initialized before the first call of the applications main routine. The \verb=exithandler()= function deletes the \verb=Coordinator= instance. If the application crashes the crash handler gets executed, which processes just a normal shutdown and cleanup.
@@ -53,10 +53,10 @@ On Linux when a function of a shared library gets called from the main executabl
 \begin{figure}[ht]
 \centering
 \includegraphics[width=16cm]{images/callmon_sequence_diagram}
-\caption{Sequence diagram of the function enter process}\label{fig:unixfe_figure2}
+\caption{Sequence diagram of the function enter process}\label{fig:UNIXfe_figure2}
 \end{figure}
 
-Figure \ref{fig:unixfe_figure2} illustrates a simplified event logging process for the first \verb=__cyg_profile_func_enter()= in which we assume that logging is enabled. If the user starts the application the constructor of the \verb=StartExitHandler= is executed up front and the exit and crash handler is set up. In the next step the \verb=__cyg_profile_func_enter()= is called. On Mac OS X and Linux exists no DllMain mechanism, so we have to use lazy initialization and thread-local storage to address this problem. A callmon instance is requested and created on demand if there is no instance for this thread. The pointer to the callmon instance is stored in the thread-local storage. After the lazy	initialization of the callmon object we check if logging is active. To determine if we are allowed to log an event, we need to create a coordinator (singleton), which is also responsible to initialize the event writer and file watcher (detailed information can be found in the following sections). Both the event writer and file watcher run in their own thread. After this, callmon can ask the coordinator if logging is active or not. The whole logging mechanism is enabled if the file watcher finds a \verb=callom.cmd= file in the callmon home directory. If this was the start of a new logging procedure we also write a pre modinfo file to the specified output directory.
+Figure \ref{fig:UNIXfe_figure2} illustrates a simplified event logging process for the first \verb=__cyg_profile_func_enter()= in which we assume that logging is enabled. If the user starts the application the constructor of the \verb=StartExitHandler= is executed up front and the exit and crash handler is set up. In the next step the \verb=__cyg_profile_func_enter()= is called. On Mac OS X and Linux exists no DllMain mechanism, so we have to use lazy initialization and thread-local storage to address this problem. A callmon instance is requested and created on demand if there is no instance for this thread. The pointer to the callmon instance is stored in the thread-local storage. After the lazy	initialization of the callmon object we check if logging is active. To determine if we are allowed to log an event, we need to create a coordinator (singleton), which is also responsible to initialize the event writer and file watcher (detailed information can be found in the following sections). Both the event writer and file watcher run in their own thread. After this, callmon can ask the coordinator if logging is active or not. The whole logging mechanism is enabled if the file watcher finds a \verb=callom.cmd= file in the callmon home directory. If this was the start of a new logging procedure we also write a pre modinfo file to the specified output directory.
 
 In the next step \verb=__cyg_profile_func_enter()= collects the whole data we need to write an event to the thread specific log file. This data is passed to the \verb=enterProcedure()= of the callmon instance. In this function we push a new \verb=CallInfo= object on our shadow stack. On the one hand we need the shadow stack to recognize if there was an exception during the execution, because then we will have a different return behavior of the function. On the other hand the shadow stack is needed to address the problem if we have an unprofiled function call between two profiled functions. Then we call the \verb=registerEvent()= function, which creates a new \verb=Event= object. The Event is then written with the help of the \verb=EventWriter= to a log file.
 
@@ -155,7 +155,7 @@ The logic for patching and cleaning happens in the 2 files \pathname{main\_patch
 
 \paragraph{Function and Callsite}
 
-This 2 classes are structs with convenience methods and constructors, they are the basic objects which the unix fact extraction library handles.  A \inlinecode{Function} bundles a number of \inlinecode{Callsite}s, we are doing this because one function might contain several enter and exit instrumentations and the actual number of instrumentations varies.
+This 2 classes are structs with convenience methods and constructors, they are the basic objects which the UNIX fact extraction library handles.  A \inlinecode{Function} bundles a number of \inlinecode{Callsite}s, we are doing this because one function might contain several enter and exit instrumentations and the actual number of instrumentations varies.
 
 Additionally they have operators defined so they can be serialized and deserialized using a \inlinecode{QDataStream}.  When serializing they just dump themselves member-wise into the stream.
 
@@ -210,7 +210,7 @@ The \inlinecode{ExeFilePatcher} is the
 
 
 
-\subsection{Metacreator} The metacreator running in the unix tool chain of CGA might be the tool which shares the most code with the Windows version. This is possible, since the Dia mechanism used on Windows is called using an interface named \inlinecode{DiaApi}. We provide an alternative implementation of \inlinecode{DiaApi} which is called \inlinecode{GDBWrapper}. This class receives the requests of metacreator and uses \inlinecode{GDBInterface} to resolve the information requested.
+\subsection{Metacreator} The metacreator running in the UNIX tool chain of CGA might be the tool which shares the most code with the Windows version. This is possible, since the Dia mechanism used on Windows is called using an interface named \inlinecode{DiaApi}. We provide an alternative implementation of \inlinecode{DiaApi} which is called \inlinecode{GDBWrapper}. This class receives the requests of metacreator and uses \inlinecode{GDBInterface} to resolve the information requested.
 
 \subsubsection{GDBInterface} The \inlinecode{GDBInterface} class wraps around GDB to retrieve debug information. This is done by starting GDB and communicating with it in terminal style. We send command lines and parse the output provided by GDB using regular expressions. 
 
