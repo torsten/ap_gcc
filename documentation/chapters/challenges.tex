@@ -1,10 +1,18 @@
+%!TEX root = ../ap_gcc.tex
+
 \section{Challenges} This section describes challenges we had to face while porting the CGA framework to Mac OS X and Linux.
 
-\subsection{Complexity} The first challenge was the complexity of CGA. The main application itself contains more than 70.000 lines of code. The whole distribution consists of about 170.000 lines of code.\\
+\todo{add more text here}
 
-Furthermore, analyzing an application using CGA requires several distinct steps, like adjusting the build process of the application that is getting analyzed, patching the applications binary and post processing the data collected while running the application. Porting this tool chain to another operating system requires a deep understanding of all those processes on one hand, and on the other hand a good idea how to realize all those details on the target platform.
+\subsection{Complexity}
 
-\subsection{Platform specifics} The whole CGA tool chain relies on lots of platform specific mechanisms such as binary patching and collecting of information from the dynamic linker. A big challenge was to find ways to get all the information needed on both target platforms.\\
+The first challenge was the complexity of CGA. The main application itself contains more than 70.000 lines of code. The whole distribution consists of about 170.000 lines of code.
+
+Furthermore, analyzing an application using CGA requires several steps, like adjusting the build process of the application that is getting analyzed, patching the applications binary and post processing the data collected while running the application. Porting this tool chain to another operating system requires a deep understanding of all those processes on one hand, and on the other hand a good idea how to realize all those details on the target platforms.
+
+\subsection{Platform specifics}
+
+The whole CGA tool chain relies on lots of platform specific mechanisms such as executable file information extraction, patching and collecting of information from the dynamic linker. A big challenge was to find ways to get all the information needed on both target platforms since this is not covered by standardized POSIX APIs.
 
 Parts of our implementation rely on GCC and GDB, which are both available on Linux and Mac OS X. They provided us with a good point of abstraction to hide platform specific details. But even with those tools, certain things behave differently on both platforms. Writing into a binary with GDB does not work on Mac OS X, but does work on Linux. Function call addresses reported by the GCC instrument function mechanism may be wrong on Linux. Just to name two examples.\\ 
 
