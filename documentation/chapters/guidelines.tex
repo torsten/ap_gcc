@@ -104,7 +104,8 @@ class MyListWrapper {
 GCC's error output is not quite clear here (like in so many cases, especially when it comes to templates). Omitting the keyword \inlinecode{typename} in the above code would throw the following compile error:
 
 \begin{verbatim}
-type ‘std::list<T, std::allocator<_CharT> >’ is not derived from type ‘MyListWrapper<T>’
+type ‘std::list<T, std::allocator<_CharT> >’ is not derived from type 
+  ‘MyListWrapper<T>’
 \end{verbatim}
 
 \subsection{Template types as parameter with default value}
