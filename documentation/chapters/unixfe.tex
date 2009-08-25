@@ -9,7 +9,7 @@ In this section we want to explain the UNIX fact extraction mechanism in more de
 First of all we want to give a quick overview about the whole workflow of the fact extraction tool chain. These are the steps if you want to instrument your application and visualize the trace in CGA:
 
 \begin{enumerate}
-	\item Building the application with special compiler flags and linking the UNIXcallmon\_lib.\{a,lib\}.
+	\item Building the application with special compiler flags and linking the unixcallmon\_lib.\{a,lib\}.
 	\item Patching the executable results in an executable with just NOPs and a patch file (patch clean).
 	\item Patching the executable with the help of an include/exclude file so that we just have specific logging enabled (patch).
 	\item Executing the application.
