@@ -147,7 +147,7 @@ Unfortunately the original patch and patchclean tools had some implementation sp
 
 Also the requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and enforces its call on all ways out of a function.  So we could handle enters and exits properly.
 
-Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.
+Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/\\unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.
 
 The logic for patching and cleaning happens in the 2 files \pathname{main\_patch.cpp} and \pathname{main\_patchclean.cpp}.  Both files are very similar and use the loosely coupled to above classes.  In the following paragraphs each of the involved classes gets a more detailed description to illustrate the implementation of the patching process on UNIX platforms.
 
@@ -175,11 +175,25 @@ The next step after initialization is a call to \inlinecode{filterFunctions()} w
 
 Internally the \inlinecode{IncludeExcludeFilter} uses \toolname{c++filt} from the GNU Binutils to de-mangle GCCs C++ symbols so the regular expressions from the file can be applied.
 
-\paragraph{ExeFilePatcher} This is the class which 
-
 \paragraph{BaseAddressRetriever}
 
+The to retriever classes gather information about executable files including shared objects on Linux and dylibs on Mac OS X.  The \inlinecode{BaseAddressRetriever} in particular is responsible for getting the base address and the offset in the actual file of an executable file's text segement.
+
+This is information is required for the \inlinecode{ExeFilePatcher} to modify the files at the right offsets.  Since this task is highly platform specific because Linux uses the ELF binary format and Mac OS X uses Mach-O there is no generic way to achieve this, there are also no generic POSIX APIs which could help here.
+
+Because of this we decided to use tools which are available on each platform to implement this information gathering.  On Linux \toolname{objdump -h} provides us with this information and on Mac OS X we can run \toolname{otool -l}.
+
+Their respective outputs tell a lot of meta information about an executable file and it gets parsed using regular expressions which are trimmed for the specific outputs.
+
 \paragraph{CallsiteRetriever}
+
+Having basic information about an executable file, however, is not enough.  It is also important to find the actual call sites to the instrumentation functions in the executable to be able to patch exactly this positions.
+
+This is the functionality the \inlinecode{CallsiteRetriever} provides.  
+
+\paragraph{ExeFilePatcher}
+
+The \inlinecode{ExeFilePatcher} is the 
 
 
 
