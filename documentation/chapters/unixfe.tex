@@ -85,7 +85,7 @@ On Mac OS X the name of the currently running application ($<$appname$>$) is det
   /proc/<pid>/exe (symbolic link)	
 \end{verbatim}
 
-Another important task of the \verb=Coordinator= is to create the \verb=EventWriter} and \verb=FileWatcher=, which will be explained later in more detail. But the most important functionality of the \verb=Coordinator= is to indicate if callmon is allowed to log the function enters and exits in a lockfree way, even in multithreaded environments. This is accomplished by using atomic operations. Since version 4.2 GCC provides a function called \verb=__sync_bool_compare_and_swap=, which sets and test a variable in an atomic way. The \verb=Coordinator= instance asks the \verb=FileWatcher= if logging is active or not. If logging is active we have to check if we are at the beginning of a new logging cycle. At the beginning of a logging cycle we have to set up certain things such as creating the output directory for the log files, write a pre modinfo file and set the output directory of the \verb=FileWatcher=. The output directory for the current trace is:
+Another important task of the \verb=Coordinator= is to create the \verb=EventWriter= and \verb=FileWatcher=, which will be explained later in more detail. But the most important functionality of the \verb=Coordinator= is to indicate if callmon is allowed to log the function enters and exits in a lockfree way, even in multithreaded environments. This is accomplished by using atomic operations. Since version 4.2 GCC provides a function called \verb=__sync_bool_compare_and_swap=, which sets and test a variable in an atomic way. The \verb=Coordinator= instance asks the \verb=FileWatcher= if logging is active or not. If logging is active we have to check if we are at the beginning of a new logging cycle. At the beginning of a logging cycle we have to set up certain things such as creating the output directory for the log files, write a pre modinfo file and set the output directory of the \verb=FileWatcher=. The output directory for the current trace is:
 
 \begin{verbatim}
   CALLMON_HOME|./logs/<appname>/<date_time>
@@ -113,7 +113,7 @@ On Linux the \verb=dl_iterate_phdr()= function walks through the list of an appl
 
 The \verb=CGA Toolbar= is a simple QT application which simplifies the whole logging process. Besides some small fixes for cross platform compatibility it is exactly the same application as the previous Windows version. With the toolbar the user can start and stop the logging mechanism and start the metacreator for traces of a specific application. The interesting part of the toolbar is in order to start and stop the logging mechanism the toolbar creates an empty file called \verb=callmon.cmd= at the path specified by the \verb=CALLMON_HOME= environment variable. To stop logging the toolbar removes the \verb=callmon.cmd= file.\\
 
-That is the reason why we need to listen on filesystem events to start and stop logging. In both cases we listens for changes on a specific path and set a variable to true if we find the \verb=callmon.cmd= file or to false if not.\\
+That is the reason why we need to listen on filesystem events to start and stop logging. In both cases we listen for changes on a specific path and set a variable to true if we find the \verb=callmon.cmd= file or to false if not.\\
 
 On Mac OS X we use the kernel event notification mechanism \verb=kqueue= and \verb=kevent=. The \verb=kqueue()= system call provides a generic method of notifying the user when an kernel event happens or a condition holds, based on the results of small pieces of kernel code termed filters. The \verb=kevent()= system call is used to register events with the queue, and return any pending events to the user. The only downside of this solution is that we do not get the exact change as an event, we just get the event that a file was created or deleted at the specified path. So we have to check manually with \verb=open(file)= if the file exists. The \verb=kevent()= system call is blocking for a specified timeout or until there is a pending event. In our case we specified a timeout of one second, so that we can interrupt the loop if we want to suspend the \verb=FileWatcher= thread.\\
 
@@ -121,11 +121,15 @@ The Linux way uses \verb=inotify= which is a Linux kernel subsystem that provide
 
 \subsubsection{Lockfree event to disk} 
 
-event writer (own thread), lockfree queue, 
+event writer (own thread), PerThreadData, setOutputdirectory, Mutex\\
 
-\subsubsection{Asynchronous IO}
+The lockfree queue is thread safe as long as there is only one reader and one writer. It has a static size which has to be provided at initialization. \todo{TODO: explain in more detail}
 
+\subsubsection{Asynchronous I/O}
 
+We use asynchronous I/O to write the logged function entries and exits to a thread specific log file. The \verb=EventWriter= runs in its own thread and stores the received events, as described in the previous section, in a lockfree queue. If the \verb=EventWriter= thread is scheduled we check if there are any events in the queue and write them to the log file. A very simple approach to write the events to the log file would be synchronous I/O, which blocks the progress of a program until the operations are completed. The alternative is to start the communication and then perform processing that does not require that the I/O has completed. This is called asynchronous I/O and is much more efficient then synchronous I/O.\\
+
+To perform asynchronous I/O we use the POSIX standard for asynchronous input and output. \verb=aio_write= gets as parameter a \verb=aiocb= structure which stores a file descriptor, file offset, the location of the buffer we want to write and the length of transfer. For more specific information have a look at the \verb=aio= man page.
 
 \subsection{Patch and Patchclean} 
 
