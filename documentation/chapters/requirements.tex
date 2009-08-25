@@ -27,7 +27,7 @@ Please note, that all the three patches are made for VRS trunk revision 6691.
 
 \paragraph{GCC} We need a GCC version, which is greater than or equal to version 4.2 because we are using some functionality which appeared in GCC version 4.2 for the first time.
 
-For example with the function \inlinecode{\_\_sync\_bool\_compare\_and\_swap} GCC provides us with a cross platform way to test and set a variable in an atomic way. This is used several times in the lock free callmon implementation and is therefore essential.
+For example with the function \inlinecode{\_\_sync\_bool\_compare\_and\_swap()} GCC provides us with a cross platform way to test and set a variable in an atomic way. This is used several times in the lock free callmon implementation and is therefore essential.
 
 We as well tested our code on GCC 4.3 without any problems.
 
