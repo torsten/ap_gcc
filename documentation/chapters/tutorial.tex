@@ -1,3 +1,5 @@
+%!TEX root = ../ap_gcc.tex
+
 \section{Tutorial}
 \label{sec:Tutorial}
 This section shows how to profile a project step by step. In general, the process is quite similar to the process needed to profile a project with the Windows version of callmon. Big differences only appear in the build configuration due to differences in the compiler switches needed by GCC.
@@ -46,7 +48,7 @@ To ensure that CGA can find the source files for the source code viewer, you nee
 \end{verbatim}
 The first parameter specifies the binary to patch. The second parameter specifies a patch file name. In this patch file, patch\_clean will write out all the locations from which profiling calls were removed along with the opcodes removed that realized the call. This information is needed by patch to re-include the call opcodes for certain functions in the next step.
 
-\subsubsection{Patch} At this point, profiling logic is re-added to the functions of interest. This is done by specifying two groups of function name patterns in a pattern file. This is exactly the same like for Windows callmon.\\
+\subsubsection{Patch} At this point, profiling logic is re-added to the functions of interest. This is done by specifying two groups of function name patterns in a pattern file. This is exactly the same like for Windows callmon.
 
 Provide a list of patterns in the include section, as well a list of patterns in the exclude section. Then, call patch like this:
 \begin{verbatim}
