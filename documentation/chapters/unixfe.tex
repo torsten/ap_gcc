@@ -174,7 +174,7 @@ Internally the \inlinecode{IncludeExcludeFilter} uses \toolname{c++filt} from th
 
 \paragraph{BaseAddressRetriever}
 
-The to retriever classes gather information about executable files including shared objects on Linux and dylibs on Mac OS X.  The \inlinecode{BaseAddressRetriever} in particular is responsible for getting the base address and the offset in the actual file of an executable file's text segement.
+The to retriever classes gather information about executable files including shared objects on Linux and dylibs on Mac OS X.  The \inlinecode{BaseAddressRetriever} in particular is responsible for getting the base address and the offset in the actual file of an executable file's text segement and provides the static method \inlinecode{getCallsites()} for this task.
 
 This is information is required for the \inlinecode{ExeFilePatcher} to modify the files at the right offsets.  Since this task is highly platform specific because Linux uses the ELF binary format and Mac OS X uses Mach-O there is no generic way to achieve this, there are also no generic POSIX APIs which could help here.
 
@@ -184,9 +184,9 @@ Their respective outputs tell a lot of meta information about an executable file
 
 \paragraph{CallsiteRetriever}
 
-Having basic information about an executable file, however, is not enough.  It is also important to find the actual call sites to the instrumentation functions in the executable to be able to patch exactly this positions.
+Having basic information about an executable file, however, is not enough.  It is also important to find the actual call sites to the instrumentation functions in the executable to be able to patch exactly this positions.  This is the functionality the \inlinecode{CallsiteRetriever} provides via the static method \inlinecode{getCallsites()} which returns a \inlinecode{QList<Function>}.
 
-This is the functionality the \inlinecode{CallsiteRetriever} provides.  
+Again, gathering this information requires analysing the executable files on both platforms.  It is necessary to disass...
 
 \paragraph{ExeFilePatcher}
 
