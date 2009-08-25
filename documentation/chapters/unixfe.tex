@@ -145,23 +145,23 @@ Unfortunately the original patch and patchclean tools had some implementation sp
 \caption{Class diagram of the UNIXFACTEXTRACTION namespace} \label{fig:unixfe_unixfe}
 \end{figure}
 
-Also the requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and enforces its call on all ways out of a function.  So we could handle enters and exits properly.
+The requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and there is no way to prevent that unlike in Visual Studio.  GCC also ensures the call into the instrumentation function every time a function returns.  Thanks to this feature we could handle function-enters and -exits properly.
 
-Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/\\unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.
+Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This two new UNIX patching tools reside in the \pathname{factextraction/unix/\\unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.
 
-The logic for patching and cleaning happens in the 2 files \pathname{main\_patch.cpp} and \pathname{main\_patchclean.cpp}.  Both files are very similar and use the loosely coupled to above classes.  In the following paragraphs each of the involved classes gets a more detailed description to illustrate the implementation of the patching process on UNIX platforms.
+The logic for patching and cleaning happens in the two files \pathname{main\_patch.cpp} and \pathname{main\_patchclean.cpp}.  Both files are very similar and use the loosely coupled above classes.  In the following paragraphs each of the involved classes gets a more detailed description to illustrate the implementation of the patching process on UNIX platforms.
 
 \subsubsection{Class Overview}
 
 \paragraph{Function and Callsite}
 
-This 2 classes are structs with convenience methods and constructors, they are the basic objects which the UNIX fact extraction library handles.  A \inlinecode{Function} bundles a number of \inlinecode{Callsite}s, we are doing this because one function might contain several enter and exit instrumentations and the actual number of instrumentations varies.
+This two classes are basically structs with convenience methods and constructors, they are the basic objects which the UNIX fact extraction library handles.  A \inlinecode{Function} bundles a number of \inlinecode{Callsite}s, we are doing this because one function might contain several enter and exit instrumentations and the actual number of generated instrumentations varies.
 
 Additionally they have operators defined so they can be serialized and deserialized using a \inlinecode{QDataStream}.  When serializing they just dump themselves member-wise into the stream.
 
 \paragraph{ExePatchStore}
 
-The \inlinecode{ExePatchStore} provides persistency for the data structures.  This is the class which actually opens, reads and writes to the .patch files.  The API is quite straight forward, first you create a new \inlinecode{ExePatchStore}.  The the store gets filled by \inlinecode{openFileForRead()}.  The actual symbols can then be read into a \inlinecode{QList} of \inlinecode{Function}s.
+The \inlinecode{ExePatchStore} provides persistency for the data structures.  This is the class which actually opens, reads and writes to the .patch files.  The API is quite straight forward, first you create a new \inlinecode{ExePatchStore}.  The store gets filled by \inlinecode{openFileForRead()}.  The actual symbols can then be read into a \inlinecode{QList} of \inlinecode{Function}s.
 
 Writing is just the other way around, you first have to call \inlinecode{openFileForWrite()} and then \inlinecode{storeSymbols()} which takes a \inlinecode{QList} of \inlinecode{Function}s and writes them into the patch file.
 
@@ -177,9 +177,9 @@ Internally the \inlinecode{IncludeExcludeFilter} uses \toolname{c++filt} from th
 
 \paragraph{BaseAddressRetriever}
 
-The to retriever classes gather information about executable files including shared objects on Linux and dylibs on Mac OS X.  The \inlinecode{BaseAddressRetriever} in particular is responsible for getting the base address and the offset in the actual file of an executable file's text segement and provides the static method \inlinecode{getCallsites()} for this task.
+The retriever classes gather information about executable files including shared objects on Linux and dylibs on Mac OS X.  The \inlinecode{BaseAddressRetriever} in particular is responsible for getting the base address and the offset in the actual file of an executable file's text segment.  The static method \inlinecode{getCallsites()} is provided for this task.
 
-This is information is required for the \inlinecode{ExeFilePatcher} to modify the files at the right offsets.  Since this task is highly platform specific because Linux uses the ELF binary format and Mac OS X uses Mach-O there is no generic way to achieve this, there are also no generic POSIX APIs which could help here.
+This information is required for the \inlinecode{ExeFilePatcher} to modify the files at the right offsets.  This task is highly platform specific because Linux uses the ELF binary format and Mac OS X uses Mach-O. This means, that there is no generic way to achieve this.
 
 Because of this we decided to use tools which are available on each platform to implement this information gathering.  On Linux \toolname{objdump -h} provides us with this information and on Mac OS X we can run \toolname{otool -l}.
 
@@ -187,23 +187,27 @@ Their respective outputs tell a lot of meta information about an executable file
 
 \paragraph{CallsiteRetriever}
 
-Having basic information about an executable file, however, is not enough.  It is also important to find the actual call sites to the instrumentation functions in the executable to be able to patch exactly this positions.  This is the functionality the \inlinecode{CallsiteRetriever} provides via the static method \inlinecode{getCallsites()} which returns a \inlinecode{QList<Function>}.
+Having basic information about an executable file, however, is not enough.  It is also important to find the actual call sites of the instrumentation functions in the executable to be able to patch exactly this positions.  This is the functionality the \inlinecode{CallsiteRetriever} provides via the static method \inlinecode{getCallsites()} which returns a \inlinecode{QList$<$Function$>$}.
 
-Again, gathering this information requires analysing the executable files on both platforms.  It is necessary to disass...
+Again, gathering this information requires analysing the executable files on both platforms.  It is necessary to disassemble the executables to find the calls to the instrumentation functions.
+
+On Linux we use \toolname{objdump -d} and on Mac OS X \toolname{otool -tvV} to disassemble the text segments of the binaries.  Both tools generate different but quite similar outputs.  So we did not have to implement 2 separate parsing mechanisms but rather use one parser function which can handle both output formats (\inlinecode{parseDisassamblyOutput()}).
 
 \paragraph{ExeFilePatcher}
 
-The \inlinecode{ExeFilePatcher} is the 
+The \inlinecode{ExeFilePatcher} is the class which actually touches the executables and modifies them.  Interestingly this class is cross-platform.
 
+All the other classes gather the required information using the platform specific-tools, the \inlinecode{ExeFilePatcher} then gets created using the executable file name, the base address and the offset.
 
+It gets then passed a list of \inlinecode{Function}s which it then either enables or disables in the executable file.  This is done via file offset math.
+The function \inlinecode{rewriteFunctions()} implements this functionality.
 
-
-\subsubsection{ELF patching} 
-
-file specifics, offsets, objdump, see requirements
-
-
-\subsubsection{Mach-O patching}
+% \subsubsection{ELF patching} 
+% 
+% file specifics, offsets, objdump, see requirements
+% 
+% 
+% \subsubsection{Mach-O patching}
 
 
 
