@@ -27,7 +27,7 @@ Please note, that all the three patches are made for VRS trunk revision 6691.
 
 \paragraph{GCC} We need a GCC version, which is greater than or equal to version 4.2 because we are using some functionality which appeared in GCC version 4.2 for the first time.
 
-For example with the function \emph{\_\_sync\_bool\_compare\_and\_swap} GCC provides us with a cross platform way to test and set a variable in an atomic way. This is used several times in the lock free callmon implementation and is therefor essential.
+For example with the function \inlinecode{\_\_sync\_bool\_compare\_and\_swap()} GCC provides us with a cross platform way to test and set a variable in an atomic way. This is used several times in the lock free callmon implementation and is therefore essential.
 
 We as well tested our code on GCC 4.3 without any problems.
 
@@ -35,17 +35,18 @@ We as well tested our code on GCC 4.3 without any problems.
 
 Our implementation of the metacreator was tested on GDB version 6.3 (on Apple Mac OS X) and 6.8 (on Ubuntu Debian Linux).
 
-We do not depend on any functionality which was introduced in version 6.3, so our implementation may also run on older and/or newer versions of GDB. But since we are using GDB in a terminal way (writing commands to it and reading its output), we highly depend on the formatting of GDBs output. Even between version 6.3 and 6.8 there were several small differences like additional line breaks in GDBs output.
+We do not depend on any functionality which was introduced in version 6.3, so our implementation may also run on older and/or newer versions of GDB. But since we are using GDB in an interactive way (writing commands to it and reading its output), we highly depend on the formatting of GDBs output. Even between version 6.3 and 6.8 there were several small differences like additional line breaks in GDBs output.
 
-But extending our implementation to handle more versions of GDB is as easy as fixing the regular expressions parsing the GDB output\footnote{See file factextraction/cpp\_mci/callmontools/gdb/gdbinterface.cpp at \todo{GDBInterface::methodName()}}.
+But extending our implementation to handle more versions of GDB is as easy as fixing the regular expressions parsing the GDB output\footnote{See file \pathname{factextraction/cpp\_mci/callmontools/gdb/gdbinterface.cpp}}.
 
 \paragraph{GNU Binutils}
 
 On Linux we are using \toolname{objdump} from the GNU Binutils distribution\footnote{http://www.gnu.org/software/binutils/} to extract data from executable files and shared objects.
-All our code was tested with version 2.19.1 of these tools.  On Mac OS X we are using \emph{otool} as provided by Apple bundled with Xcode version 3.1.3\footnote{http://developer.apple.com/technology/Xcode.html}.
+All our code was tested with version 2.19.1 of these tools.  On Mac OS X we are using \toolname{otool} as provided by Apple bundled with Xcode version 3.1.3\footnote{http://developer.apple.com/technology/Xcode.html}.
 
-Like in the GDB case we are parsing the output using regular expressions, so changes in the output format of these tools may break our parsing, but again, only some regular expression need to be adjusted\footnote{See files factextraction/unix/unixfactextraction/*retriever.cpp}.
+Like in the GDB case we are parsing the output using regular expressions, so changes in the output format of these tools may break our parsing, but again, only some regular expression need to be adjusted\footnote{See files
+\pathname{baseaddressretriever.cpp} and \pathname{callsiteretriever.cpp} in \pathname{factextraction/unix/unixfactextraction/}}.
 
-\emph{c++filt} is used in includeexcludefilter.cpp to de-mangle C++ symbols on Linux and Mac OS X.
+\toolname{c++filt} is used in \pathname{includeexcludefilter.cpp} to de-mangle C++ symbols on Linux and Mac OS X.
 
 \paragraph{Xcode} GCC, GDB and GNU Binutils are already installed on Mac OS X with Xcode.  So whereas on Linux your are responsible for installing the separate packages, on OS X our only dependency is Xcode.
