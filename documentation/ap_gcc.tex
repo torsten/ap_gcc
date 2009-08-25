@@ -79,7 +79,12 @@
 \ifpdf \DeclareGraphicsExtensions{.pdf, .jpg, .tif, .png} \else \DeclareGraphicsExtensions{.eps, .jpg} \fi
 
 \maketitle
-\begin{abstract}
+
+% introduction
+\begin{large}
+\textbf{Introduction}\\	
+\end{large}
+
 The goal of software visualization is to give insight into complex, large-scale, existing software systems and their physical composition and relations. CGA - Call Graph Analyzer - is a software visualization infrastructure that is developed by the computer graphics systems chair of the Hasso-Plattner-Institute. The Call Graph Analyzer obtains information from various fact extraction tools and provides an interactive graph visualization system. CGA addresses the following different software engineering tasks:
 
 \begin{itemize}
@@ -89,9 +94,7 @@ The goal of software visualization is to give insight into complex, large-scale,
 	\item Quality Assurance
 \end{itemize}
 
-The intended operating system of CGA is Windows. We ported this tool chain to Mac OS X and Linux systems. \todo{why port to linux and mac}
-\end{abstract}
-
+When CGA started the intended operating system was Windows. The goal of this project was to port the whole CGA tool chain to Mac OS X and Linux systems. \todo{TODO: motivation why port to unix?}
 \newpage
 
 \tableofcontents
