@@ -182,7 +182,9 @@ public:
 };
 \end{verbatim}
 
-\subsection{windows.h} You \textbf{must not} include windows.h because all the types and functions provided by windows.h are highly Windows specific and will not compile nor run on other platforms. In general you will find the same functionality in QtCore. When using QtCore's functionality, it is easy to compile and run the code on all the platforms supported by Qt.
+\subsection{windows.h}
+
+You \textbf{must not} include \pathname{windows.h} because all the types and functions provided by \pathname{windows.h} are highly Windows specific and will not compile nor run on other platforms. In general you will find the same functionality in QtCore. When using QtCore's functionality, it is easy to compile and run the code on all the platforms supported by Qt.
 
 \subsection{for each() vs. foreach() vs. for()} Visual C++ provides a construct which looks like this:
 

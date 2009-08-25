@@ -24,7 +24,7 @@ The unix fact extraction mechanism is a non-intrusive, light-weight way for logg
 
 \subsection{Callmon}
 
-The central element of the tracing mechanism is callmon. Callmon is a static library, which you have to link against the application you want to instrument. But the most important part is the GCC parameter -finstrument-functions. We will explain this later in more detail. To get an overview about the classes which are involved in the tracing mechanism have a look at figure \ref{fig:unixfe_figure1}.
+The central element of the tracing mechanism is callmon. Callmon is a static library, which you have to link against the application you want to instrument. But the most important part is the GCC parameter \inlinecode{-finstrument-functions}. We will explain this later in more detail. To get an overview about the classes which are involved in the tracing mechanism have a look at figure \ref{fig:unixfe_figure1}.
 
 \begin{figure}[ht]
 \centering
@@ -127,21 +127,53 @@ The lockfree queue is thread safe as long as there is only one reader and one wr
 
 \subsubsection{Asynchronous I/O}
 
-We use asynchronous I/O to write the logged function entries and exits to a thread specific log file. The \verb=EventWriter= runs in its own thread and stores the received events, as described in the previous section, in a lockfree queue. If the \verb=EventWriter= thread is scheduled we check if there are any events in the queue and write them to the log file. A very simple approach to write the events to the log file would be synchronous I/O, which blocks the progress of a program until the operations are completed. The alternative is to start the communication and then perform processing that does not require that the I/O has completed. This is called asynchronous I/O and is much more efficient then synchronous I/O.
+We use asynchronous I/O to write the logged function entries and exits to a thread specific log file. The \verb=EventWriter= runs in its own thread and stores the received events, as described in the previous section, in a lock-free queue. If the \verb=EventWriter= thread is scheduled we check if there are any events in the queue and write them to the log file. A very simple approach to write the events to the log file would be synchronous I/O, which blocks the progress of a program until the operations are completed. The alternative is to start the communication and then perform processing that does not require that the I/O has completed. This is called asynchronous I/O and is much more efficient then synchronous I/O.
 
-To perform asynchronous I/O we use the POSIX standard for asynchronous input and output. \verb=aio_write()= gets as parameter a \verb=aiocb= structure which stores a file descriptor, file offset, the location of the buffer we want to write and the length of transfer. For more specific information have a look at the \verb=aio= man page.
+To perform asynchronous I/O we use the POSIX standard for asynchronous input and output. \verb=aio_write()= gets as parameter a \verb=aiocb= structure which stores a file descriptor, file offset, the location of the buffer we want to write and the length of transfer. For more specific information have a look at the \verb=aio(4)= man page.
+
 
 \subsection{Patch and Patchclean}
 
-Unfortunately the original patch and patchclean tools had some implementation specific limitations which made a direct port to UNIX hardly feasible.
+Unfortunately the original patch and patchclean tools had some implementation specific limitations which made a direct port to UNIX hardly feasible.  They did use the DIA API and \inlinecode{CALLMONTOOLS::PatchWriter} uses Windows specific code to write the actual executable file.
 
-\todo{Reasons: Windows API, PE code, DIA API, nur enter}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=16cm]{images/unixpatchtools}
+\caption{Class diagram of the UNIXFACTEXTRACTION namespace} \label{fig:unixfe_unixfe}
+\end{figure}
 
-Also the requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and enforces its call on all ways out of a function.
+Also the requirements on Linux and Mac OS X where different because of the fact that GCC always compiles the exit instrumentation into the functions and enforces its call on all ways out of a function.  So we could handle enters and exits properly.
 
-Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \emph{factextraction/unix/unixfactextraction/} directory.
+Because of the above mentioned reasons we decided to re-implement the patching tool chain for Linux and Mac OS X.  This 2 new UNIX patching tools reside in the \pathname{factextraction/unix/unixfactextraction/} directory in the UNIXFACTEXTRACTION namespace.  Figure \ref{fig:unixfe_unixfe} gives an overview of all the involved classes.  In the following paragraphs each class gets a more detailed description
 
-\todo{Explain architecture, similar to windows, patch files (qdatastream), }
+\subsubsection{Class Overview}
+
+\paragraph{Function and Callsite}
+
+This 2 classes are structs with convenience methods and constructors, they are the basic objects which the unix fact extraction library handles.  A \inlinecode{Function} bundles a number of \inlinecode{Callsite}s, we are doing this because one function might contain several enter and exit instrumentations and the actual number of instrumentations varies.
+
+Additionally they have operators defined so they can be serialized and deserialized using a \inlinecode{QDataStream}.  When serializing they just dump themselves member-wise into the stream.
+
+\paragraph{ExePatchStore}
+
+The \inlinecode{ExePatchStore} provides persistency for the data structures.  This is the class which actually opens, reads and writes to the .patch files.  The API is quite straight forward, first you create a new \inlinecode{ExePatchStore}.  The the store gets filled by \inlinecode{openFileForRead()}.  The actual symbols can then be read into a \inlinecode{QList} of \inlinecode{Function}s.
+
+Writing is just the other way around, you first have to call \inlinecode{openFileForWrite()} and then \inlinecode{storeSymbols()} which takes a \inlinecode{QList} of \inlinecode{Function}s and writes them into the patch file.
+
+Writing and reading is realized using a \inlinecode{QDataStream}, so data gets written in a binary format and Qt does most of the hard serialization work for lists and other complex data structures.
+
+\paragraph{IncludeExcludeFilter}
+
+This class is responsible for the filtering of \inlinecode{QList} of \inlinecode{Function}s.   An \inlinecode{IncludeExcludeFilter} gets created with the name of the func-patterns file as the first parameter.  When parsing the file we actually support exactly the same syntax as the original CGA supports, we achieved this by re-using code from \pathname{patchtools/funcpatternfilereader.h}, so this makes the UNIX factextraction code depended on the patchtools.
+
+The next step after initialization is a call to \inlinecode{filterFunctions()} which takes a list of \inlinecode{Function}s and alters the list depending on the previously parsed file.
+
+Internally the \inlinecode{IncludeExcludeFilter} uses \toolname{c++filt} from the GNU Binutils to de-mangle GCCs C++ symbols so the regular expressions from the file can be applied.
+
+\paragraph{ExeFilePatcher} This is the class which 
+
+
+
 
 
 \subsubsection{ELF patching} 
