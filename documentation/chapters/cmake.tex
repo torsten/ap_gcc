@@ -2,7 +2,7 @@
 
 \section{CMake Build System} CMake is a great tool for managing complex cross platform build processes. The general idea is not to create just another build system, but to automatically generate configuration or project files for widely used build systems and IDEs.
 
-To build a project using CMake, \pathname{CMakeLists.txt} files need to created. Those files contain information on files to build, paths to include, libraries and executables to create, pre and post build activities and much more.
+To build a project using CMake, \pathname{CMakeLists.txt} files need to get created. Those files contain information on files to build, paths to include, libraries and executables to create, pre and post build activities and much more.
 
 There are no special things to consider while writing code which will be build using CMake.
 
@@ -45,7 +45,22 @@ By the way, on Linux there is, like on Windows systems, a GUI that helps configu
 
 
 \subsection{On Windows}
+Since on Windows the automatic dependency finding does not work like on unix systems (because it is not possible to predict where libraries and headers of dependencies are placed) some more steps are needed, but all of them are straight forward. You need the CGA dependency package on your system.
 
-\todo{CMake GUI - grouped view}
+\begin{itemize}
+	\item Start up the CMake GUI
+	\item Set the source code directory to the CGA root directory
+    \item Set the build directory to a newly created directory inside the CGA root directory (you might want to call it \pathname{build})
+    \item Hit the configure button (lots of red lines should appear in the GUI)
+    \item Point all the red marked paths to the correct locations of dependency headers and libraries
+    \item Hit the configure button again, all red lines should disappear now
+    \item Hit the generate button
+    \item Inside the \pathname{build} folder a new file named \pathname{cga.sln} was created
+    \item Open this file with Visual Studio
+    \item Build the solution
+\end{itemize}
+
+
+\todo{CMake GUI screenshot}
 
 \subsection{Qt specific build steps} Building projects using Qt requires additional build steps like running \toolname{uic} and \toolname{moc}. CMake provides special commands for that: \inlinecode{QT4\_WRAP\_UI}, \inlinecode{QT4\_WRAP\_CPP} and \inlinecode{QT4\_ADD\_RESOURCES}. Generated files are placed in \pathname{build/cga}.
