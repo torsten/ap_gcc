@@ -1,0 +1,38 @@
+Quick Demo
+
+Prepare
+	- $ gdb ioquake3.i386
+		(gdb) b /Users/frederik/projects/ioquake3/code/sys/sys_main.c:569
+		(gdb) run
+		(gdb) disable 1
+	- CALLMON_HOME=~/Desktop/ioquake3/ioquake3-instrumented ./cgatoolbar
+	- CGA on Mac (ioquake trace)	
+	- CGA on Linux (unixcallmontest trace)
+1. (gdb) c
+2. quake console: demo four
+3. Logging starten (cgatoolbar)
+4. Disk activity zeigen
+5. Logging stoppen
+6. ioquake und cgatoolbar beenden
+7. Finder logs zeigen
+8. CGA on Mac (ioquake trace zeigen)
+9. CGA on Linux (unixcallmontest trace zeigen)
+
+
+Full Demo
+
+Prepare
+	- ioquake Makefile (modified) in textmate
+	- patchfuncpatterns.txt in textmate
+	 
+1. Flags im Makefile erklären
+2. cga_patchclean ioquake3.i386 ioquake3.i386.patch
+3. patchfuncpatterns file erklären
+4. cga_patch ioquake3.i386 ioquake3.i386.patch patchfuncpatterns.txt
+5. ioquake starten und loggen mit hilfe von cgatoolbar (nur erzählen)
+6. Logs erwähnen
+7. callmonmetacreator logs/ioquake3.i386/...
+8. Abbrechen da es lange dauert 100 millionen events umzuwandeln
+9. Trace importieren in CGA (nur erzählen)
+10. ioquake trace in CGA zeigen
+11. unixcallmontest trace in CGA (concurrency viewer) zeigen
